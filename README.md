@@ -1,2 +1,4 @@
-# Final-Project-ICT128
-Collection Of Powershell Scripts
+# Auploy - Final-Project-ICT128
+
+
+Server Deployment and Management Tool Set
