@@ -1,0 +1,8 @@
+﻿Letter,Groups,Permission
+F,"Executives,IT Admin",RW
+H,"Executives,IT Admin,HR,Administration",RW
+I,Everyone,RW
+M,Executives,RW
+Z,"IT Admin,IT Tech",RW
+
+

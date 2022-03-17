@@ -1,0 +1,108 @@
+First Name,Last Name,Department,Subdepartment,Title,Reports To,Site,Login,EmailAddress,Office Location,Office Local Phone,Employee ID
+Rod,Butters,Head Office,Executives,Co-Owner and CEO,N/A,Head Office,,,C200,4510,20220001
+Audrey,Surrao,Head Office,Executives,Co-Owner and CFO,N/A,Head Office,,,C201,4511,20220002
+James,Hanna,Head Office,Executives,Chef de Cuisine,CEO,Head Office,,,C202,4512,20220003
+Jason,Whitfield,Head Office,Executives,Pastry Chef,CEO,Head Office,,,C203,4513,20220004
+Anthony,Chalmers,Head Office,Executives,Restaurant Manager,CEO,Head Office,,,C204,4514,20220005
+Scarlett,Johansson,Head Office,Executives,CIO,CEO,Head Office,,,C205,4515,20220006
+Al,Pacino,Head Office,Executives,VP - Human Resources,CEO,Head Office,,,C206,4516,20220007
+Meryl,Streep,Head Office,Executives,VP - Finance,CFO,Head Office,,,C207,4517,20220008
+Samuel,Jackson,Head Office,Executives,VP - Marketing and PR,CFO,Head Office,,,C208,4518,20220009
+Robert,Downey Jr.,Head Office,HR,Recruiter,VP - Human Resources,Head Office,,,C209,4519,20220010
+Daniel,Craig,Head Office,HR,HR Assistant,VP - Human Resources,Head Office,,,C210,4520,20220011
+Jennifer,Lawrence,Head Office,HR,HR Assistant,VP - Human Resources,Head Office,,,C211,4521,20220012
+Will,Smith,Head Office,HR,HR Assistant,VP - Human Resources,Head Office,,,C212,4522,20220013
+Amy,Adams,Head Office,Administration,Receptionist,VP - Human Resources,Head Office,,,N/A,4523,20220014
+Christian,Bale,Head Office,Administration,Admin Assistant,VP - Human Resources,Head Office,,,C214,4524,20220015
+Cate,Blanchett,Head Office,IT Admin,Senior Network Administrator,CIO,Head Office,,,C215,4525,20220016
+Matt,Damon,Head Office,IT Admin,Junior Network Administrator,CIO,Head Office,,,C216,4526,20220017
+Ryan,Gosling,Head Office,IT Tech,Technician,CIO,Head Office,,,C217,4527,20220018
+Bradley,Cooper,Head Office,IT Tech,Technician,CIO,Head Office,,,C218,4528,20220019
+Jane,Fonda,RRK,Front of House,Hostess,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220020
+Sally,Field,RRK,Front of House,Hostess,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220021
+Julie,Andrews,RRK,Front of House,Bartender,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220022
+Shirley,Temple,RRK,Front of House,Bartender,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220023
+Angelina ,Jolie,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220024
+Sandra,Bullock,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220025
+Paul,Newman,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220026
+Jeff,Bridges,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220027
+Don,Cheadle,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220028
+Vin,Diesel,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220029
+Gwyneth,Paltrow,RRK,Front of House,Server,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220030
+Marisa,Tomei,RRK,Front of House,Busser,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220031
+Michelle,Pfeiffer,RRK,Front of House,Busser,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220032
+Jennifer,Connelly,RRK,Front of House,Bar-Back,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220033
+Jack,Nicholson,RRK,Front of House,Bar-Back,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220034
+Leonardo,DiCaprio,RRK,Back of House,Sous Chef,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220035
+Morgan,Freeman,RRK,Back of House,Sous Chef,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220036
+Robert,De Niro,RRK,Back of House,Line Cook,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220037
+Daniel,Day-Lewis,RRK,Back of House,Line Cook,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220038
+Anthony,Hopkins,RRK,Back of House,Line Cook,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220039
+Benicio,del Toro,RRK,Back of House,Warewasher,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220040
+Peter,Dinklage,RRK,Back of House,Warewasher,Restaurant Manager,RauDZ Regional Kitchen,,,N/A,N/A,20220041
+Julia,Roberts,MBB,Front of House,Hostess,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220042
+Charlize,Theron,MBB,Front of House,Hostess,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220043
+Hilary,Swank,MBB,Front of House,Bartender,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220044
+Nicole,Kidman,MBB,Front of House,Bartender,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220045
+Brie,Larson,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220046
+Lupita,Nyong'o,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220047
+Natalie,Portman,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220048
+Margot,Robbie,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220049
+Elvis,Presley,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220050
+Roger,Waters,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220051
+Alice,Cooper,MBB,Front of House,Server,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220052
+Aretha,Franklin,MBB,Front of House,Busser,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220053
+Axl,Rose,MBB,Front of House,Busser,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220054
+Bob,Dylan,MBB,Front of House,Bar-Back,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220055
+Bob,Marley,MBB,Front of House,Bar-Back,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220056
+Bruce,Springsteen,MBB,Back of House,Sous Chef,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220057
+Eddie,Vedder,MBB,Back of House,Sous Chef,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220058
+Kurt,Cobain,MBB,Back of House,Line Cook,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220059
+Dave,Grohl,MBB,Back of House,Line Cook,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220060
+David,Bowie,MBB,Back of House,Line Cook,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220061
+Elton,John,MBB,Back of House,Warewasher,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220062
+Emin,Em,MBB,Back of House,Warewasher,Restaurant Manager,Micro Bar & Bistro,,,N/A,N/A,20220063
+Chuck,Berry,SMD,Front of House,Host,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220064
+Jimmy,Cliff,SMD,Front of House,Host,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220065
+Freddy,Mercury,SMD,Front of House,Host,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220066
+Gwen,Stefani,SMD,Front of House,Hostess,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220067
+Gene,Simmons,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220068
+Paul,Stanley,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220069
+Jerry,Garcia,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220070
+Otis,Redding,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220071
+Neil,Young,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220072
+Steven,Tyler,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220073
+Tina,Turner,SMD,Front of House,Server,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220074
+Stevie,Nicks,SMD,Front of House,Busser,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220075
+Roger,Daltrey,SMD,Front of House,Busser,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220076
+Sid,Vicious,SMD,Front of House,Busser,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220077
+Sinead,O'Connor,SMD,Front of House,Busser,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220078
+The,Edge,SMD,Back of House,Sous Chef,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220079
+Tom,Petty,SMD,Back of House,Sous Chef,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220080
+Van,Morrison,SMD,Back of House,Line Cook,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220081
+Joan,Jett,SMD,Back of House,Line Cook,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220082
+John,Fogerty,SMD,Back of House,Line Cook,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220083
+John,Lennon,SMD,Back of House,Warewasher,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220084
+Janis,Joplin,SMD,Back of House,Warewasher,Restaurant Manager,Sunny's Modern Diner,,,N/A,N/A,20220085
+Jacques,Lennon,TOT,Front of House,Host,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220086
+Peter,Gabriel,TOT,Front of House,Host,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220087
+Carlos,Santana,TOT,Front of House,Host,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220088
+Buddy,Holly,TOT,Front of House,Hostess,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220089
+Ma,Donna,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220090
+Don,Henley,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220091
+Eddie,Van Halen,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220092
+James,Lennon,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220093
+Mick,Jagger,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220094
+Liam,Gallagher,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220095
+Frank,Zappa,TOT,Front of House,Server,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220096
+Dwayne ,Johnson,TOT,Front of House,Busser,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220097
+Adam,Sandler,TOT,Front of House,Busser,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220098
+Tom,Hanks,TOT,Front of House,Busser,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220099
+David Lee,Roth,TOT,Front of House,Busser,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220100
+Mickey,Dolenz,TOT,Back of House,Sous Chef,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220101
+Peter,Tork,TOT,Back of House,Sous Chef,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220102
+Davy,Jones,TOT,Back of House,Line Cook,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220103
+Michael,Nesmith,TOT,Back of House,Line Cook,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220104
+Keith,Richards,TOT,Back of House,Line Cook,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220105
+Stevie,Wonder,TOT,Back of House,Warewasher,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220106
+Jennifer,Lennon,TOT,Back of House,Warewasher,Restaurant Manager,The Okanagan Table,,,N/A,N/A,20220107
