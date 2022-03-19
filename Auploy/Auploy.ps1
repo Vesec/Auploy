@@ -1,7 +1,9 @@
 ﻿
+$Scriptpath = $MyInvocation.MyCommand.Path
+[int] $NameLength = ($MyInvocation.MyCommand.Name).length + 8
+$Global:AuployPath = $Scriptpath -replace ".{$NameLength}$"
 
 
-$error.clear()
 
 function Get-UsernameInput{
 
@@ -19,43 +21,27 @@ $Global:AuployPath = Read-Host "
     ░     ░  ░  ░    ░ ░           ░  ░   ░        ░  ░    ░ ░         ░ ░     ░     
                                                            ░ ░                       
 
-*Could Not find Path to Auploy*
+Could Not find Settings
 
-Expected Path $DesktopPath
+Expected Settings Directory $Auploypath
 
 Enter Enter Path To Folder Containing Auploy"
 
 }
 
-$DesktopPath = [Environment]::GetFolderPath("Desktop")
-
-$error.clear()
 
 try{
 
-$Global:OUFile = Import-Csv "$DesktopPath\Auploy\Settings\OU\OU.csv"
-$Global:UserFile = Import-Csv "$DesktopPath\Auploy\Users\Users.csv"
-$Global:BaseFile = Import-Csv "$DesktopPath\Auploy\Settings\Host\Basefile.csv"
-$Global:GPOSettings = Import-Csv "$DesktopPath\Auploy\Settings\GPO\GPOSettings.csv"
-$Global:GPOStructure = Import-Csv "$DesktopPath\Auploy\Settings\GPO\GPOStructure.csv"
-$Global:GroupsFile = Import-Csv "$DesktopPath\Auploy\Users\UserGroups.csv"
-$Global:DriveMap = Import-Csv "$DesktopPath\Auploy\Settings\Drives\DriveMap.csv"
-}
+  $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OU.csv"
+  $Global:UserFile = Import-Csv "$AuployPath\Users\Users.csv"
+  $Global:BaseFile = Import-Csv "$AuployPath\Settings\Host\Basefile.csv"
+  $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOSettings.csv"
+  $Global:GPOStructure = Import-Csv "$AuployPath\Settings\GPO\GPOStructure.csv"
+  $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
+  $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
+  }
 
 catch {Get-UsernameInput}
-
-
-if ($error){
-
-$Global:OUFile = Import-Csv "$AuployPath\Auploy\Settings\OU\OU.csv"
-$Global:UserFile = Import-Csv "$AuployPath\Auploy\Users\Users.csv"
-$Global:BaseFile = Import-Csv "$AuployPath\Auploy\Settings\Host\Basefile.csv"
-$Global:GPOSettings = Import-Csv "$AuployPath\Auploy\Settings\GPO\GPOSettings.csv"
-$Global:GPOStructure = Import-Csv "$AuployPath\Auploy\Settings\GPO\GPOStructure.csv"
-$Global:GroupsFile = Import-Csv "$AuployPath\Auploy\Users\UserGroups.csv"
-$Global:DriveMap = Import-Csv "$AuployPath\Auploy\Settings\Drives\DriveMap.csv"
-
-}
 
 $Global:TopOU = $Basefile.TopOU[0]
 $Global:Password = $Basefile.Password[0]
@@ -75,6 +61,9 @@ $GatewayIP = $GatewayIPObject
 ####################################### Create VM's and Drives ##########################################
 
 function Get-VMProperties{
+
+
+
 
 
       $Global:Userval = Read-Host "Server or Host? (S/H) "
@@ -255,6 +244,7 @@ function Add-PrimaryADRoles {
 
 function Add-SecondaryADRoles {
 
+
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name DNS -IncludeManagementTools
@@ -333,7 +323,6 @@ Get-DnsServerResourceRecord -ZoneName "$Top.$Space.$Root"
 }
 
 #>
-
 function Set-FWPermissions{
 
     New-NetFirewallRule -DisplayName "Allow IPv4 Ping Inbound" -Name "Allow IPv4 Ping Inbound" -direction Inbound -IcmpType 8 -Protocol ICMPv4 -Action Allow
