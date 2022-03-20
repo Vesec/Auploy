@@ -13,9 +13,3 @@ function Get-ISOList {
     $selectedISO = $ISOList[$ISONumber]
     $selectedISO
 }
-
-
-
-$AuployPath = pwd
-
-Write-Output $Auploypath.Path

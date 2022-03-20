@@ -49,21 +49,34 @@ $Global:HostIP = $Basefile.IPV4[0]
 $Global:SecondaryIP = $Basefile.IPV4[1]
 $Global:Hostname = $Basefile.Hostname[0]
 $Global:SecHostname = $Basefile.Hostname[1]
-$Global:GatewayIPObject = $Basefile.Gateway[0]
-$Global:MaskObject = $Basefile.Mask[0]
-$Global:NetworkID = $Basefile.NetworkID[0]
+$GLobal:Subnet = $Basefile.Subnet
+$Global:GatewayIP = $Basefile.Gateway[0]
+$Global:Mask = $Basefile.Mask[0]
+$Global:VMHDDSize = 0 + $Drives.Size
 $Global:DHCPStart = $Basefile.Start[0]
 $Global:DHCPEnd = $Basefile.End[0]
+$Global:ADSecondary = $Basefile.NetworkID + "in-addr.arpa"
+$Global:Forest = $Basefile.Forest
+$Global:VMSwitch = $Basefile.Switch
 [int32] $Global:DHCPPercent = $Basefile.Percent[0]
-$Mask = $MaskObject
-$GatewayIP = $GatewayIPObject
+
 
 ####################################### Create VM's and Drives ##########################################
 
 function Get-VMProperties{
+<#
+.SYNOPSIS
+Short description
 
+.DESCRIPTION
+Long description
 
+.EXAMPLE
+An example
 
+.NOTES
+General notes
+#>
 
 
       $Global:Userval = Read-Host "Server or Host? (S/H) "
@@ -80,7 +93,7 @@ function Get-VMProperties{
 
           $Global:VMPath = "C:\Users\Owner\Desktop\VM Trials\"
           $Global:VHDPath = "C:\Users\Owner\Desktop\VM Trials\$VMname\$VMname" + ".vhdx"
-          $Global:Imagepath = "C:\Users\Owner\Documents\ISO Files\Windows Server 2019 DataCenter en-US MAY 2021 {Gen2}\SRV2019.DC.ENU.MAY2021.iso"
+          $Global:Imagepath = "C:\Users\Owner\Documents\ISO Files\Windows Server 2022.iso"
 
           }
 
@@ -102,11 +115,13 @@ function Get-VMProperties{
           }
 
           if ($Userval -eq "H" -or $Userval -eq "h"){
+            $Global:VMRam = 0 + 2GB
             Make-VMHost
             Write-Host "VM Created at Path $VMPath"
           }
 
           elseif ($Userval -eq "S" -or $Userval -eq "s"){
+            $Global:VMRam = 0 + 4GB
             Make-VMServer
             Write-Host "VM Created at Path $VMPath"
           }
@@ -116,10 +131,24 @@ function Get-VMProperties{
 
 
 function Make-VMServer {
-    
+<#
+.SYNOPSIS
+Short description
+
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
+
+
 try{
-  New-VM -Name $VMName -Path $VMPath -MemoryStartupBytes 4GB -Generation 2 -Switchname "External Virtual Switch"
-  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes 120GB
+  New-VM -Name $VMName -Path $VMPath -MemoryStartupBytes $VMRam -Generation 2 -Switchname "External Virtual Switch"
+  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes $VMHDDSize
   Add-VMDvdDrive -VMName $VMName -Path $Imagepath
   Set-VMProcessor $VMname -Count $VMCores -Reserve 10 -Maximum 75
   Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath
@@ -140,20 +169,20 @@ if ($NetDrives -eq "Y"){
   }
 
 
-  function Make-VMHost {
-
-
-  New-VM -Name "$VMName" -Path $VMPath -MemoryStartupBytes 2GB -Generation 2 -Switchname "External Virtual Switch"
-  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes 120GB
-  Add-VMDvdDrive -VMName $VMName -Path $Imagepath
-  Set-VMProcessor $VMname -Count $VMCores -Reserve 10 -Maximum 75
-  Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath
-  Set-BootOrder
-
-}
-
 
 function Set-BootOrder{
+<#
+.SYNOPSIS
+
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 
 $VMname = $VMname
 $VMObject = Get-VMFirmware $VMname
@@ -169,13 +198,26 @@ Set-VMFirmware -VMName $VMname -BootOrder $DVD,$VHD,$Network
 
 
 function Make-NetDrives{
+<#
+.SYNOPSIS
+Short description
+
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 
   if ($NetDrives -eq "Y"){
     $i = 0
     foreach ($Drive in $Drivemap){
         
         $NetworkDrive = "$VMPath" + "$Drive.Groups[$i]" + ".Vhdx"
-        New-VHD -Path "$NetworkDrive" -Dynamic -SizeBytes 120GB
+        New-VHD -Path "$NetworkDrive" -Dynamic -SizeBytes $VMHDDSize
         Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $NetworkDrive
         $i++
         }
@@ -185,7 +227,19 @@ function Make-NetDrives{
 
 
 function Add-Network{
+<#
+.SYNOPSIS
+Short description
 
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 
 
 ##GRAB INTERFACE INDEX
@@ -194,7 +248,7 @@ $AutoIndex = Get-NetAdapter -Name * -Physical
 
 
 ##SET STATIC ADDRESS
-New-NetIPAddress -InterfaceIndex $Intindex -IPAddress $HostIP -Prefixlength 24 `
+New-NetIPAddress -InterfaceIndex $Intindex -IPAddress $HostIP -Prefixlength $Mask `
 -DefaultGateway $GatewayIP -AddressFamily IPv4
 
 ## SET DNS
@@ -204,7 +258,21 @@ Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP"
 }
 
 function Disable-IpV6{
-##Disable IPv6
+  <#
+  .SYNOPSIS
+  Short description
+  
+  .DESCRIPTION
+  Long description
+  
+  .EXAMPLE
+  An example
+  
+  .NOTES
+  General notes
+  #>
+
+
 $IPv6Check = Get-NetAdapterBinding | Where-Object ComponentID -EQ 'ms_tcpip6'
 $IPv6Status = $IPv6Check.enabled
 
@@ -219,7 +287,6 @@ Disable-NetAdapterBinding -Name 'Ethernet' -ComponentID 'ms_tcpip6'
 
 
 function Set-HostName{
-
 
 Rename-Computer -NewName "$Global:Hostname"
 
@@ -238,7 +305,7 @@ function Add-PrimaryADRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
-  Install-ADDSForest -DomainName HQ.Raudz.Com -InstallDNS -Force
+  Install-ADDSForest -DomainName $Forest -InstallDNS -Force
 
 }
 
@@ -251,10 +318,11 @@ function Add-SecondaryADRoles {
 }
 
 function Set-DNSSecondary{
+
   $Stall = Read-Host "Press [Enter] When You are Ready For The DNS Zone Transfer"
-  Add-DhcpServerInDC -DnsName HQ.Raudz.Com  -IPAddress 192.168.1.2
-  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name HQ.Raudz.Com -ZoneFile HQ.Raudz.Com
-  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name 1.168.192.in-addr.arpa -ZoneFile 1.168.192.in-addr.arpa
+  Add-DhcpServerInDC -DnsName $Forest  -IPAddress $SecondaryIP
+  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $Forest -ZoneFile $Forest
+  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $ADSecondary -ZoneFile $ADSecondary
   Get-DnsServerZone
 }
 
@@ -267,8 +335,8 @@ function Add-DHCPRole {
 
 function Set-DHCPRole {
 
-  Add-DhcpServerInDC -DnsName HQ.Raudz.Com  -IPAddress 192.168.1.1
-  Add-DhcpServerInDC -DnsName HQ.Raudz.Com  -IPAddress 192.168.1.2
+  Add-DhcpServerInDC -DnsName $Forest  -IPAddress $HostIP
+  Add-DhcpServerInDC -DnsName $Forest  -IPAddress $SecondaryIP
   Add-DhcpServerv4Scope -Name "$Top Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask 255.255.255.0
 
 }
@@ -276,12 +344,12 @@ function Set-DHCPRole {
 function Add-DHCPFailover{
 
 Add-DhcpServerv4Failover `
--ComputerName dc01 `
+-ComputerName $Hostname `
 -Name "Network" `
--PartnerServer dc02 `
+-PartnerServer $SecHostname `
 -ScopeId $DHCPStart,$DHCPEnd `
 -LoadBalancePercent 50 `
--SharedSecret "P@ssw0rd!!" `
+-SharedSecret "$Password" `
 -MaxClientLeadTime 2:00:00 `
 -AutoStateTransition $True `
 -StateSwitchInterval 2:00:00
@@ -290,39 +358,28 @@ Add-DhcpServerv4Failover `
 
 function Set-DNSRecords{
 
-Remove-DnsServerResourceRecord -Zonename HQ.Raudz.Com -InputObject (Get-DNsServerResourceRecord -ZoneName "HQ.Raudz.Com" -Type 1 -Name "dc01")
+Remove-DnsServerResourceRecord -Zonename $Forest -InputObject (Get-DNsServerResourceRecord -ZoneName "$Forest" -Type 1 -Name "$Hostname")
 
 Add-DnsServerResourceRecordA `
--Name "dc01" `
--ZoneName "HQ.Raudz.Com" `
+-Name "$Hostname" `
+-ZoneName "$Forest" `
 -CreatePtr `
--IPv4Address 192.168.1.1 `
+-IPv4Address $HostIP `
 -TimeToLive 01:00:00 `
 
 
 
 Add-DnsServerResourceRecordA `
--Name "dc02" `
--ZoneName "HQ.Raudz.Com" `
+-Name "$SecHostname" `
+-ZoneName "$Forest" `
 -CreatePtr `
--IPv4Address 192.168.1.2 `
+-IPv4Address $SecondaryIP `
 -TimeToLive 01:00:00 `
 
 
 
 }
 
-<#
-
-function Do-DNSZoneTransfer{
-
-Add-DnsServerSecondaryZone -MasterServers $HostIP -Name "$Top.$Space.$Root" -ZoneFile "$Top.$Space.$Root"
-Start-DnsServerZoneTransfer -Name "$Top.$Space.$Root" 
-Get-DnsServerResourceRecord -ZoneName "$Top.$Space.$Root"
-
-}
-
-#>
 function Set-FWPermissions{
 
     New-NetFirewallRule -DisplayName "Allow IPv4 Ping Inbound" -Name "Allow IPv4 Ping Inbound" -direction Inbound -IcmpType 8 -Protocol ICMPv4 -Action Allow
@@ -451,10 +508,10 @@ General notes
 #>
 
 
-  #Import-Module activedirectory
-
+  ## Iterate Through CSV
   foreach ($User in $Userfile) {
 
+    ## Grab and Assign CSV Info
     $Username = $User. "First Name"[0] + "." + $User. "Last Name"
     $OU = $User.Subdepartment
     $Firstname = $User. "First Name"
@@ -467,18 +524,16 @@ General notes
     $OUObject = Get-ADOrganizationalUnit -Filter 'Name -like $OU'
     $OUpath = $OUObject.DistinguishedName
 
-
-
-
-
+    ## User Check
     if (Get-ADUser -F { SamAccountName -EQ $EmployeeID }) {
       Write-Warning "A user account with username $Username already exist in Active Directory."
     }
 
     else {
 
+      ## Add User
       New-ADUser -SamAccountName "$EmployeeID" `
-         -UserPrincipalName "$EmployeeID@$TopOU.Com" `
+         -UserPrincipalName "$EmployeeI$Forest" `
          -Name "$Display" `
          -GivenName "$Firstname" `
          -Surname "$Lastname" `
@@ -503,13 +558,12 @@ General notes
 
 function Make-GPOStructure {
 
-
 <#
 .SYNOPSIS
 Creates a GPO in the Assigned OU with Values From GPOSettings.Csv
 
 .DESCRIPTION
-Long description
+
 
 .EXAMPLE
 An example
@@ -557,8 +611,6 @@ function Add-GPOValues {
 
 
 
-
-
     if ($GPOType -eq "DWord") {
 
       [int]$DWord = $GPOValue
@@ -593,8 +645,19 @@ function Add-GPOValues {
 
 
 function Add-ADGroup {
+<#
+.SYNOPSIS
+Short description
 
+.DESCRIPTION
+Long description
 
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 
   foreach ($Group in $GroupsFile) {
 
@@ -647,8 +710,7 @@ function Set-PasswordPolicy {
 function Set-ComputerPath{
 
 
-## Remove Hard Code Later
-redircmp “OU=Computers,OU=Raudz,DC=HQ,DC=Raudz,DC=Com”
+redircmp “OU=Computers,OU=$TopOU,DC=$Top,DC=$Space,DC=$Root”
 
 }
 
@@ -705,7 +767,7 @@ elseif ($Choice -eq "5") {
     
     Add-SecondaryADRoles
     Set-FWPermissions
-    Install-ADDSDomainController -Domainname "HQ.Raudz.Com" -Credential (Get-Credential "HQ\Administrator")
+    Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "HQ\Administrator")
 
 }
 
@@ -880,14 +942,14 @@ function Title-Screen { Write-Host `
             Tools:
 
             1.  Create VM Host or Server
-            2.  Set Static Default Settings (DC01)
-            3.  Set Static Default Settings (DC02)
-            4.  Setup Roles Primary Domain Controller (DC01)
-            5.  Setup Roles Secondary Domain Controller (DC02)
-            6.  Setup Primary DNS Records (DC01)
-            7.  Start DNS Zone Transfer (DC02)
-            8.  Build AD DS Structure (DC01)
-            9.  Create DHCP Failover (DC01) -Buggy
+            2.  Set Static Default Settings ($Hostname)
+            3.  Set Static Default Settings ($SecHostname)
+            4.  Setup Roles Primary Domain Controller ($Hostname)
+            5.  Setup Roles Secondary Domain Controller ($SecHostname)
+            6.  Setup Primary DNS Records ($Hostname)
+            7.  Start DNS Zone Transfer ($SecHostname)
+            8.  Build AD DS Structure ($Hostname)
+            9.  Create DHCP Failover ($Hostname) -Buggy
             10. Setup Host For a Domain (PC)
             11. Standalone Setup Tools (Incomplete)
             12. Exit
