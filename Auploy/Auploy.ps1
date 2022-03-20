@@ -1,4 +1,12 @@
-﻿
+﻿<#
+
+Auploy Author: Tyler Dorner
+Version: V.0.2
+Date: 
+Comments:
+
+#>
+
 $Scriptpath = $MyInvocation.MyCommand.Path
 [int] $NameLength = ($MyInvocation.MyCommand.Name).length + 8
 $Global:AuployPath = $Scriptpath -replace ".{$NameLength}$"
@@ -49,15 +57,15 @@ $Global:HostIP = $Basefile.IPV4[0]
 $Global:SecondaryIP = $Basefile.IPV4[1]
 $Global:Hostname = $Basefile.Hostname[0]
 $Global:SecHostname = $Basefile.Hostname[1]
-$GLobal:Subnet = $Basefile.Subnet
+$GLobal:Subnet = $Basefile.Subnet[0]
 $Global:GatewayIP = $Basefile.Gateway[0]
 $Global:Mask = $Basefile.Mask[0]
-$Global:VMHDDSize = 0 + $Drives.Size
+$Global:VMHDDSize = 0 + $Drives.Size[0]
 $Global:DHCPStart = $Basefile.Start[0]
 $Global:DHCPEnd = $Basefile.End[0]
-$Global:ADSecondary = $Basefile.NetworkID + "in-addr.arpa"
-$Global:Forest = $Basefile.Forest
-$Global:VMSwitch = $Basefile.Switch
+$Global:DNSReverse = $Basefile.NetworkID + "in-addr.arpa"
+$Global:Forest = $Basefile.Forest[0]
+$Global:VMSwitch = $Basefile.Switch[0]
 [int32] $Global:DHCPPercent = $Basefile.Percent[0]
 
 
@@ -305,7 +313,7 @@ function Add-PrimaryADRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
-  Install-ADDSForest -DomainName $Forest -InstallDNS -Force
+  Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force
 
 }
 
@@ -320,9 +328,9 @@ function Add-SecondaryADRoles {
 function Set-DNSSecondary{
 
   $Stall = Read-Host "Press [Enter] When You are Ready For The DNS Zone Transfer"
-  Add-DhcpServerInDC -DnsName $Forest  -IPAddress $SecondaryIP
-  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $Forest -ZoneFile $Forest
-  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $ADSecondary -ZoneFile $ADSecondary
+  Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
+  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name "$Forest" -ZoneFile "$Forest"
+  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $DNSReverse -ZoneFile $DNSReverse
   Get-DnsServerZone
 }
 
@@ -335,9 +343,9 @@ function Add-DHCPRole {
 
 function Set-DHCPRole {
 
-  Add-DhcpServerInDC -DnsName $Forest  -IPAddress $HostIP
-  Add-DhcpServerInDC -DnsName $Forest  -IPAddress $SecondaryIP
-  Add-DhcpServerv4Scope -Name "$Top Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask 255.255.255.0
+  Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $HostIP
+  Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
+  Add-DhcpServerv4Scope -Name "$Top Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet
 
 }
 
@@ -357,8 +365,24 @@ Add-DhcpServerv4Failover `
 }
 
 function Set-DNSRecords{
+<#
+.SYNOPSIS
+Short description
 
-Remove-DnsServerResourceRecord -Zonename $Forest -InputObject (Get-DNsServerResourceRecord -ZoneName "$Forest" -Type 1 -Name "$Hostname")
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
+
+Add-DnsServerSecondaryZone -Name "$Forest" -ZoneFile "$Forest"
+Add-DnsServerSecondaryZone -Name $DNSReverse -ZoneFile $DNSReverse
+
+Remove-DnsServerResourceRecord -Zonename "$Forest" -InputObject (Get-DNsServerResourceRecord -ZoneName "$Forest" -Type 1 -Name "$Hostname")
 
 Add-DnsServerResourceRecordA `
 -Name "$Hostname" `
@@ -411,6 +435,11 @@ General notes
   $DCPath = Get-ADOrganizationalUnit -Filter 'Name -like "Domain Controllers"'
   $OUBase = $DCpath.DistinguishedName
   $OU,$Global:Top,$Global:Space,$Global:Root = $OUBase.split(",")
+
+}
+
+function Make-TopOU{
+
   New-ADOrganizationalUnit -Name $TopOU -Path "$Top,$Space,$Root" -ProtectedFromAccidentalDeletion $False
 
 
@@ -533,7 +562,7 @@ General notes
 
       ## Add User
       New-ADUser -SamAccountName "$EmployeeID" `
-         -UserPrincipalName "$EmployeeI$Forest" `
+         -UserPrincipalName "$EmployeeI"$Forest"" `
          -Name "$Display" `
          -GivenName "$Firstname" `
          -Surname "$Lastname" `
@@ -786,6 +815,7 @@ elseif ($Choice -eq "7") {
 elseif ($Choice -eq "8") {
 
     Set-OUPath
+    Make-TopOU
     Make-OUStructure
     Make-GPOStructure
     Add-GPOValues
