@@ -1,0 +1,41 @@
+select disk 1
+clean
+attributes disk clear readonly
+online disk
+convert mbr
+create partition primary size=300
+format quick fs=ntfs label="Finance"
+Assign Letter=F
+select disk 2
+clean
+attributes disk clear readonly
+online disk
+convert mbr
+create partition primary size=300
+format quick fs=ntfs label="HR"
+Assign Letter=H
+select disk 3
+clean
+attributes disk clear readonly
+online disk
+convert mbr
+create partition primary size=300
+format quick fs=ntfs label="Internal"
+Assign Letter=I
+select disk 4
+clean
+attributes disk clear readonly
+online disk
+convert mbr
+create partition primary size=300
+format quick fs=ntfs label="Marketing"
+Assign Letter=M
+select disk 5
+clean
+attributes disk clear readonly
+online disk
+convert mbr
+create partition primary size=300
+format quick fs=ntfs label="IT Resources"
+Assign Letter=Z
+PAUSE

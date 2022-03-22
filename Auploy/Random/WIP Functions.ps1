@@ -1,4 +1,4 @@
-
+new-smbshare -Name "Marketing" -Path "M:\"
 
 function Get-ISOList {
     <#

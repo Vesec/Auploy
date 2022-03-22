@@ -49,7 +49,25 @@ try{
   $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
   }
 
-catch {Get-UsernameInput}
+catch {
+
+    try{
+        
+      $DesktopPath = [Environment]::GetFolderPath("Desktop")
+      $AuployPath = "$DesktopPath\Auploy"
+      $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OU.csv"
+      $Global:UserFile = Import-Csv "$AuployPath\Users\Users.csv"
+      $Global:BaseFile = Import-Csv "$AuployPath\Settings\Host\Basefile.csv"
+      $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOSettings.csv"
+      $Global:GPOStructure = Import-Csv "$AuployPath\Settings\GPO\GPOStructure.csv"
+      $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
+      $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
+
+    }
+    catch{Get-UsernameInput}
+
+}
+
 
 $Global:TopOU = $Basefile.TopOU[0]
 $Global:Password = $Basefile.Password[0]
@@ -60,10 +78,10 @@ $Global:SecHostname = $Basefile.Hostname[1]
 $GLobal:Subnet = $Basefile.Subnet[0]
 $Global:GatewayIP = $Basefile.Gateway[0]
 $Global:Mask = $Basefile.Mask[0]
-$Global:VMHDDSize = 0 + $Drives.Size[0]
+$Global:VMHDDSize = 0 + 120GB
 $Global:DHCPStart = $Basefile.Start[0]
 $Global:DHCPEnd = $Basefile.End[0]
-$Global:DNSReverse = $Basefile.NetworkID + "in-addr.arpa"
+$Global:DNSReverse = $Basefile.NetworkID[0]
 $Global:Forest = $Basefile.Forest[0]
 $Global:VMSwitch = $Basefile.Switch[0]
 [int32] $Global:DHCPPercent = $Basefile.Percent[0]
@@ -124,21 +142,23 @@ General notes
 
           if ($Userval -eq "H" -or $Userval -eq "h"){
             $Global:VMRam = 0 + 2GB
-            Make-VMHost
-            Write-Host "VM Created at Path $VMPath"
           }
 
           elseif ($Userval -eq "S" -or $Userval -eq "s"){
             $Global:VMRam = 0 + 4GB
-            Make-VMServer
-            Write-Host "VM Created at Path $VMPath"
           }
 
+          Add-UserVM
+          Write-Host "
+          
+          
+          VM Created at Path $VMPath"
+
 }
 }
 
 
-function Make-VMServer {
+function Add-UserVM {
 <#
 .SYNOPSIS
 Short description
@@ -160,7 +180,6 @@ try{
   Add-VMDvdDrive -VMName $VMName -Path $Imagepath
   Set-VMProcessor $VMname -Count $VMCores -Reserve 10 -Maximum 75
   Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath
-  $VMObject = Get-VMFirmware $VMname
   Set-BootOrder
 
   $NetDrives = Read-Host "Create and Attach CSV Specified Drives for Network Storage?"
@@ -192,7 +211,6 @@ An example
 General notes
 #>
 
-$VMname = $VMname
 $VMObject = Get-VMFirmware $VMname
 $VMBootOrder = $VMObject.BootOrder
 
@@ -379,10 +397,12 @@ An example
 General notes
 #>
 
-Add-DnsServerSecondaryZone -Name "$Forest" -ZoneFile "$Forest"
-Add-DnsServerSecondaryZone -Name $DNSReverse -ZoneFile $DNSReverse
 
-Remove-DnsServerResourceRecord -Zonename "$Forest" -InputObject (Get-DNsServerResourceRecord -ZoneName "$Forest" -Type 1 -Name "$Hostname")
+Add-DnsServerPrimaryZone -NetworkID "$DNSReverse/$Mask" -ReplicationScope "Forest" -ErrorAction SilentlyContinue
+
+
+Remove-DnsServerResourceRecord -Zonename "$Forest" -InputObject (Get-DNsServerResourceRecord -ZoneName "$Forest" -Type 1 -Name "$Hostname") -ErrorAction SilentlyContinue
+
 
 Add-DnsServerResourceRecordA `
 -Name "$Hostname" `
@@ -399,6 +419,7 @@ Add-DnsServerResourceRecordA `
 -CreatePtr `
 -IPv4Address $SecondaryIP `
 -TimeToLive 01:00:00 `
+
 
 
 
@@ -549,7 +570,7 @@ General notes
     $Site = $User.Site
     $Title = $User.Title
     $Department = $User.Department
-    $EmployeeID = $User. "Employee ID"
+    $EmployeeID = $User."Employee ID"
     $OUObject = Get-ADOrganizationalUnit -Filter 'Name -like $OU'
     $OUpath = $OUObject.DistinguishedName
 
@@ -562,7 +583,7 @@ General notes
 
       ## Add User
       New-ADUser -SamAccountName "$EmployeeID" `
-         -UserPrincipalName "$EmployeeI"$Forest"" `
+         -UserPrincipalName "$Firstname.$Lastname@$TopOU.com" `
          -Name "$Display" `
          -GivenName "$Firstname" `
          -Surname "$Lastname" `
@@ -735,11 +756,39 @@ function Set-PasswordPolicy {
 
 }
 
+function Add-DriveProperties{
+  diskpart.exe /s "$AuployPath\Settings\Drives\ActivateDrives.txt"
+}
 
+function Add-NetworkDrivePath{
+  New-smbshare -Name "HR" -Path "H:\" -ChangeAccess "Executives", "HR", "IT Admin", "Administration"  -NoAccess "KEL\20220008", "KEL\20220009"
+  New-smbshare -Name "Finance" -Path "F:\" -ChangeAccess "Executives", "IT Admin" -NoAccess "KEL\20220007", "KEL\20220009"
+  New-smbshare -Name "Internal" -Path "I:\" -ChangeAccess "Executives", "Employees", "IT Admin", "IT Tech", "Administration", "HR"
+  New-smbshare -Name "Marketing" -Path "M:\" -ChangeAccess "Executives", "IT Admin", "IT Tech"
+  New-smbshare -Name "IT Resources" -Path "Z:\" -ChangeAccess "Executives", "IT Admin", "IT Tech"
+  
+
+  <#
+  foreach ($Drive in $Drivemap){
+      $Letter = $Drive.Letter
+      $DriveName = $Drive.Name
+      $Groups = $Drive.Groups
+      $Exclusions = $Drive.Exclude
+      Write-Host $Letter $DriveName $Groups
+
+      if ($Drivemap.Exclude -eq ""){
+      #New-smbshare -Name "$DriveName" -Path "${Letter}:\" -ChangeAccess $Groups
+      }
+      else{
+      #New-smbshare -Name "$DriveName" -Path "${Letter}:\" -ChangeAccess $Groups -NoAccess $Exclusions
+      }
+  }
+  #>
+}
 function Set-ComputerPath{
 
 
-redircmp “OU=Computers,OU=$TopOU,DC=$Top,DC=$Space,DC=$Root”
+redircmp “OU=Computers,OU=$TopOU,$Top,$Space,$Root”
 
 }
 
@@ -752,7 +801,7 @@ function Main-Selection{
 if ($Choice -eq "1") {
 
     Get-VMProperties
-    Title-Screen
+    Get-TitleScreen
 
 }
 
@@ -765,7 +814,7 @@ elseif ($Choice -eq "2") {
     Set-Hostname
     Disable-IPv6
     Restart-Computer
-    Title-Screen
+    Get-TitleScreen
 
 
 }
@@ -777,7 +826,7 @@ elseif ($Choice -eq "3") {
     Set-Hostname
     Disable-IPv6
     Restart-Computer
-    Title-Screen
+    Get-TitleScreen
     
 }
 
@@ -786,6 +835,8 @@ elseif ($Choice -eq "4") {
     Add-PrimaryADRoles
     Set-FWPermissions
     Set-DHCPRole
+
+
     
 
 
@@ -796,19 +847,19 @@ elseif ($Choice -eq "5") {
     
     Add-SecondaryADRoles
     Set-FWPermissions
-    Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "HQ\Administrator")
+    Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "INT\Administrator")
 
 }
 
 elseif ($Choice -eq "6") {
       Set-DNSRecords
-      Main-Selection
+      Get-TitleScreen
 }
 
 
 elseif ($Choice -eq "7") {
       Set-DNSSecondary
-      Main-Selection
+      Get-TitleScreen
 }
 
 
@@ -821,34 +872,39 @@ elseif ($Choice -eq "8") {
     Add-GPOValues
     Add-OUUsers
     Add-ADGroup
+    Add-DriveProperties
+    Add-NetworkDrivePath
     Set-PasswordPolicy
     Set-ComputerPath
     Set-DHCPRole
-    Main-Selection
+    Get-TitleScreen
 
 }
 
 elseif ($Choice -eq "9") {
     Add-DHCPFailover
-    Main-Selection
+    Get-TitleScreen
 }
 
 elseif ($Choice -eq "10") {
  set-executionpolicy remotesigned -Force
  $Global:Hostname = Read-Host "Enter The New Hostname"
- $Global:HostDomain = Read-Host "Enter Domain Name"
  Set-Hostname
  Set-DNS
- Add-Host
- Main-Selection
+ Get-TitleScreen
 
 }
 
 elseif ($Choice -eq "11") {
-    Standalone-Tools
+    $Global:HostDomain = Read-Host "Enter Domain Name"
+    Add-Host
+    Get-ToolsMenu
 }
 
 elseif ($Choice -eq "12") {
+    Get-ToolsMenu
+}
+elseif ($Choice -eq "13") {
     Exit
 }
 
@@ -860,11 +916,11 @@ elseif ($Choice -eq "12") {
 
 
 
-function Standalone-Selection{
+function Get-ToolsMenu{
 
     if ($Choice -eq "1"){
         set-executionpolicy remotesigned -Force
-        Standalone-Tools
+        Get-ToolsMenu
 
 
     }
@@ -872,7 +928,7 @@ function Standalone-Selection{
     elseif ($Choice -eq "2"){
     $Global:HostIP = Read-Host "Enter IPv4 Address"
     $Global:SecondaryIP = Read-Host "Enter Secondary DNS"
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
@@ -880,7 +936,7 @@ function Standalone-Selection{
         $Global:Hostname = Read-Host "Enter The New Hostname"
         Set-Hostname
         Restart-Computer
-        Standalone-Tools
+        Get-ToolsMenu
         
 
     }
@@ -888,64 +944,64 @@ function Standalone-Selection{
     elseif ($Choice -eq "4"){
     $Global:HostDomain = Read-Host "Enter Domain Name"
     Add-Host
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
     elseif ($Choice -eq "5"){
     Add-SecondaryADRoles
-    Standalone-Tools
+    Get-ToolsMenu
     }
 
     elseif ($Choice -eq "6"){
     Set-FWPermissions
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
     elseif ($Choice -eq "7"){
     Set-DNSRecords
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
     elseif ($Choice -eq "8"){
        Set-DNSRecords
-       Standalone-Tools
+       Get-ToolsMenu
     }
 
     elseif ($Choice -eq "9"){
         Add-DHCPFailover
-        Standalone-Tools
+        Get-ToolsMenu
     }
 
     elseif ($Choice -eq "10"){
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
     elseif ($Choice -eq "11"){
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
     elseif ($Choice -eq "12"){
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
     elseif ($Choice -eq "13"){
-    Standalone-Tools
+    Get-ToolsMenu
 
     }
 
     elseif ($Choice -eq "Back" -or $Choice -eq "back"){
-            Title-Screen
+            Get-TitleScreen
 
         }
 
 }
 
-function Title-Screen { Write-Host `
+function Get-TitleScreen { Write-Host `
      "
 
 
@@ -972,28 +1028,28 @@ function Title-Screen { Write-Host `
             Tools:
 
             1.  Create VM Host or Server
-            2.  Set Static Default Settings ($Hostname)
-            3.  Set Static Default Settings ($SecHostname)
+            2.  Set Static Default Settings Server ($Hostname)
+            3.  Set Static Default Settings Server ($SecHostname)
             4.  Setup Roles Primary Domain Controller ($Hostname)
             5.  Setup Roles Secondary Domain Controller ($SecHostname)
             6.  Setup Primary DNS Records ($Hostname)
             7.  Start DNS Zone Transfer ($SecHostname)
             8.  Build AD DS Structure ($Hostname)
             9.  Create DHCP Failover ($Hostname) -Buggy
-            10. Setup Host For a Domain (PC)
+            10. Set Static Default Settings Host (PC)
             11. Standalone Setup Tools (Incomplete)
             12. Exit
 
 
 "
 
-Selection
+Get-Selection
 Main-Selection
 }
 
 
 
-function Standalone-Tools{ "
+function Get-ToolsMenu{ "
 
             ---------------Standalone Tools----------------------
 
@@ -1018,13 +1074,13 @@ function Standalone-Tools{ "
             15. Activate a Drive
 
 "
-Selection
-Standalone-Selection
+Get-Selection
+Get-ToolsMenu
 
 }
 
 
-function Selection {
+function Get-Selection {
   $Global:Choice = Read-Host "Selection "
 
 }
@@ -1033,4 +1089,4 @@ function Selection {
 ######## LOAD MENU ##########
 
 
-Title-Screen
+Get-TitleScreen

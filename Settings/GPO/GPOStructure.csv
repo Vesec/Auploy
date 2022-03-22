@@ -2,4 +2,6 @@
 Block Removable Media Devices,Employees
 No Automatic System Restart,Computers
 Block Computer Settings,"Employees,Executives"
-Drive Access,Users
+Executives Drive Access,Executives
+Employee Drive Access,Employees
+IT Drive Access,IT
