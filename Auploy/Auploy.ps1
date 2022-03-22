@@ -1,4 +1,4 @@
-﻿<#
+<#
 
 Auploy Author: Tyler Dorner
 Version: V.0.2
@@ -130,7 +130,20 @@ General notes
           $Global:Imagepath = "C:\Users\Owner\Documents\ISO Files\Windows.iso"
 
           }
+        elseif ($CurrentMachine -eq "School" -and $Userval -eq "S"){
 
+          $Global:VMPath = "$AuployPath\VM's\"
+          $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
+          $Global:Imagepath = "C:\ISO's\Win 10 Ent\Windows 10 1903.iso"
+
+          }
+        elseif ($CurrentMachine -eq "School" -and $Userval -eq "H"){
+
+          $Global:VMPath = "$AuployPath\VM's\"
+          $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
+          $Global:Imagepath = "C:\ISO's\Server 2019\Windows Server 2019.iso"
+  
+            }
 
         else{
 
@@ -331,7 +344,7 @@ function Add-PrimaryADRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
-  Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force
+  Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force ## Type Failure???
 
 }
 
