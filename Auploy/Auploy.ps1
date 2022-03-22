@@ -15,7 +15,7 @@ $Global:AuployPath = $Scriptpath -replace ".{$NameLength}$"
 
 function Get-UsernameInput{
 
-$Global:AuployPath = Read-Host "
+$Global:AuployPath = Read-Host " 
 
 
  █     █░ ██░ ██  ▒█████      ▄▄▄       ██▀███  ▓█████    ▓██   ██▓ ▒█████   █    ██ 
@@ -860,7 +860,8 @@ elseif ($Choice -eq "5") {
     
     Add-SecondaryADRoles
     Set-FWPermissions
-    Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "INT\Administrator")
+    $NetBios = Read-Host "Enter the NETBIOS"
+    Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "$NetBios\Administrator")
 
 }
 
@@ -941,6 +942,7 @@ function Get-ToolsMenu{
     elseif ($Choice -eq "2"){
     $Global:HostIP = Read-Host "Enter IPv4 Address"
     $Global:SecondaryIP = Read-Host "Enter Secondary DNS"
+    Add-Network
     Get-ToolsMenu
 
     }
@@ -1072,7 +1074,7 @@ function Get-ToolsMenu{ "
             Tools:
 
             1.  Enable Scripts on Host
-            2.  Set DNS
+            2.  Set Static Network Settings
             3.  Set Hostname
             4.  Add Computer to a Domain
             6.  Install AD DS
