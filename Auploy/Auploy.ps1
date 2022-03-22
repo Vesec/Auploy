@@ -1,4 +1,4 @@
-<#
+﻿<#
 
 Auploy Author: Tyler Dorner
 Version: V.0.2
@@ -911,7 +911,7 @@ elseif ($Choice -eq "10") {
 elseif ($Choice -eq "11") {
     $Global:HostDomain = Read-Host "Enter Domain Name"
     Add-Host
-    Get-ToolsMenu
+    Get-TitleScreen
 }
 
 elseif ($Choice -eq "12") {
@@ -1050,8 +1050,9 @@ function Get-TitleScreen { Write-Host `
             8.  Build AD DS Structure ($Hostname)
             9.  Create DHCP Failover ($Hostname) -Buggy
             10. Set Static Default Settings Host (PC)
-            11. Standalone Setup Tools (Incomplete)
-            12. Exit
+            11. Add a Host Machine To a Domain (PC)
+            12. Standalone Setup Tools (Incomplete)
+            13. Exit
 
 
 "
