@@ -1,8 +1,6 @@
-﻿Letter,Groups,Permission
-F,"Executives,IT Admin",RW
-H,"Executives,IT Admin,HR,Administration",RW
-I,Everyone,RW
-M,Executives,RW
-Z,"IT Admin,IT Tech",RW
-
-
+﻿Name,Letter,Groups,Exclude
+Finance,F,'"Executives", "IT Admin"',
+HR,H,"Executives, IT Admin, HR, Administration",
+Internal,I,Everyone,
+Marketing,M,Executives,
+Z,"IT Admin, IT Tech",

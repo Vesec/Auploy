@@ -92,6 +92,20 @@ function Get-VMProperties{
 
           }
 
+          elseif ($CurrentMachine -eq "School" -and $Userval -eq "S"){
+
+            $Global:VMPath = "$AuployPath\VM's\"
+            $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
+            $Global:Imagepath = "C:\ISO's\Win 10 Ent\Windows 10 1903.iso"
+  
+            }
+          elseif ($CurrentMachine -eq "School" -and $Userval -eq "H"){
+
+            $Global:VMPath = "$AuployPath\VM's\"
+            $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
+            $Global:Imagepath = "C:\ISO's\Server 2019\Windows Server 2019.iso"
+  
+            }
 
         else{
 

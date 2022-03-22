@@ -1,3 +1,3 @@
-﻿Hostname,IPV4,Mask,Gateway,Password,TopOU,NetworkID,Start,End,Percent
-DC01,192.168.1.1,24,192.168.1.254,P@ssw0rd!!,Raudz,192.168.1,192.168.1.100,192.168.1.220,70
-DC02,192.168.1.2,24,192.168.1.254,,,,,,
+﻿Forest,Domains,Hostname,IPV4,Subnet,Mask,Gateway,Switch,Password,TopOU,NetworkID,Start,End,Percent
+Int.Raudz.Com,,DC01,192.168.1.1,255.255.255.0,24,192.168.1.254,External Virtual Switch,P@ssw0rd!!,Raudz,192.168.1,192.168.1.100,192.168.1.220,70
+,,DC02,192.168.1.2,,24,192.168.1.254,,,,,,,
