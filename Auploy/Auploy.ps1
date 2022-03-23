@@ -79,12 +79,16 @@ $GLobal:Subnet = $Basefile.Subnet[0]
 $Global:GatewayIP = $Basefile.Gateway[0]
 $Global:Mask = $Basefile.Mask[0]
 $Global:VMHDDSize = 0 + 120GB
-$Global:DHCPStart = $Basefile.Start[0]
-$Global:DHCPEnd = $Basefile.End[0]
+$Global:DHCPStart = $Basefile.DHCPStart[0]
+$Global:DHCPEnd = $Basefile.DHCPEnd[0]
 $Global:DNSReverse = $Basefile.NetworkID[0]
 $Global:Forest = $Basefile.Forest[0]
 $Global:VMSwitch = $Basefile.Switch[0]
+$Global:VPNStart = $Basefile.VPNStart[0]
+$Global:VPNEnd = $Basefile.VPNEnd[0]
 [int32] $Global:DHCPPercent = $Basefile.Percent[0]
+$Global:Roles = $Basefile.Roles[0]
+$Global:ServerRole = $Basefile.Server[0]
 
 
 ####################################### Create VM's and Drives ##########################################
@@ -196,35 +200,39 @@ General notes
 #>
 
 
-try{
+
   New-VM -Name $VMName -Path $VMPath -MemoryStartupBytes $VMRam -Generation 2 -Switchname "External Virtual Switch" -ErrorAction SilentlyContinue
-  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes $VMHDDSize-ErrorAction SilentlyContinue
+  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes $VMHDDSize -ErrorAction SilentlyContinue
   Add-VMDvdDrive -VMName $VMName -Path $Imagepath -ErrorAction SilentlyContinue
   Set-VMProcessor $VMname -Count $VMCores -Reserve 10 -Maximum 75 -ErrorAction SilentlyContinue
-  Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath -ErrorAction SilentlyContinue
+
+try{
+  Get-VM "$VMName" -ErrorAction SilentlyContinue | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath 
   Set-BootOrder
 
   $NetDrives = Read-Host "Create and Attach CSV Specified Drives for Network Storage?"
 
   }
 
-Catch{ 
 
-  Write-Warning "
+
+
+catch{ Write-Warning "
   
   
-  Whoops, Looks like You Might need Elevated privileges" -WarningAction Inquire
-  $Global:VMCreated = 0
-
-
+        Whoops, Looks like You Might need Elevated privileges" -WarningAction Inquire
+        $Global:VMCreated = 0
+            
 }
+
+
 
 if ($NetDrives -eq "Y"){
   Make-NetDrives
 
   }
 
-  }
+}
 
 
 
@@ -243,7 +251,7 @@ An example
 General notes
 #>
 
-$VMObject = Get-VMFirmware $VMname
+$VMObject = Get-VMFirmware $VMname -ErrorAction SilentlyContinue
 $VMBootOrder = $VMObject.BootOrder
 
 $Network = $VMBootOrder[0]
@@ -430,18 +438,18 @@ General notes
 #>
 
 
-Add-DnsServerPrimaryZone -NetworkID "$DNSReverse/$Mask" -ReplicationScope "Forest" -ErrorAction SilentlyContinue
+Add-DnsServerPrimaryZone -NetworkID "$NetworkID/$Mask" -ReplicationScope "Forest" -ErrorAction SilentlyContinue
 
 
 Remove-DnsServerResourceRecord -Zonename "$Forest" -InputObject (Get-DNsServerResourceRecord -ZoneName "$Forest" -Type 1 -Name "$Hostname") -ErrorAction SilentlyContinue
 
-
+try{
 Add-DnsServerResourceRecordA `
 -Name "$Hostname" `
 -ZoneName "$Forest" `
 -CreatePtr `
 -IPv4Address $HostIP `
--TimeToLive 01:00:00 `
+-TimeToLive 01:00:00 ` -ErrorAction SilentlyContinue
 
 
 
@@ -450,8 +458,12 @@ Add-DnsServerResourceRecordA `
 -ZoneName "$Forest" `
 -CreatePtr `
 -IPv4Address $SecondaryIP `
--TimeToLive 01:00:00 `
+-TimeToLive 01:00:00 ` -ErrorAction SilentlyContinue
+}
 
+catch{
+  Write-Warning "An A Record May Already Exist, Or The Secondary Domain Controller Is not Reachable."
+}
 
 
 
@@ -793,6 +805,7 @@ function Add-DriveProperties{
 }
 
 function Add-NetworkSettingsDrivePath{
+  
   New-smbshare -Name "HR" -Path "H:\" -ChangeAccess "Executives", "HR", "IT Admin", "Administration"  -NoAccess "KEL\20220008", "KEL\20220009"
   New-smbshare -Name "Finance" -Path "F:\" -ChangeAccess "Executives", "IT Admin" -NoAccess "KEL\20220007", "KEL\20220009"
   New-smbshare -Name "Internal" -Path "I:\" -ChangeAccess "Executives", "Employees", "IT Admin", "IT Tech", "Administration", "HR"
@@ -824,126 +837,50 @@ redircmp “OU=Computers,OU=$TopOU,$Top,$Space,$Root”
 
 }
 
-######################################## Deployment Menu Functions ############################################
+######################################## Title Menu Functions ############################################
 
-function Main-Selection{
-
-
-
-if ($Choice -eq "1") {
-
-    Get-VMProperties
-    Get-TitleScreen
-
-}
-
-elseif ($Choice -eq "2") {
-
-    $Global:HostIP = $Basefile.IPV4[0]
-    $Global:SecondaryIP = $Basefile.IPV4[1]
-    $Global:Hostname = $Basefile.Hostname[0]
-    Add-NetworkSettings
-    Set-Hostname
-    Disable-IPv6
-    Restart-Computer
-    Get-TitleScreen
+function Get-TitleFunctions{
 
 
-}
-elseif ($Choice -eq "3") {
-    $Global:HostIP = $Basefile.IPV4[1]
-    $Global:SecondaryIP = $Basefile.IPV4[0]
-    $Global:Hostname = $Basefile.Hostname[1]
-    Add-NetworkSettings
-    Set-Hostname
-    Disable-IPv6
-    Restart-Computer
-    Get-TitleScreen
-    
-}
 
+  if ($UserChoice -eq "1") {
 
-elseif ($Choice -eq "4") {
-    Add-PrimaryADRoles
-    Set-FWPermissions
-    Set-DHCPRole
-
-
-    
-
-
-}
-
-
-elseif ($Choice -eq "5") {
-    
-    Add-SecondaryADRoles
-    Set-FWPermissions
-    $NetBios = Read-Host "Enter the NETBIOS"
-    Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "$NetBios\Administrator")
-
-}
-
-elseif ($Choice -eq "6") {
-      Set-DNSRecords
+      Get-VMProperties
       Get-TitleScreen
-}
 
+  }
 
-elseif ($Choice -eq "7") {
-      Set-DNSSecondary
+  if ($UserChoice -eq "2") {
+
+      Get-DeploymentMenu
+
+  }
+
+  elseif ($UserChoice -eq "3") {
+      set-executionpolicy remotesigned -Force
+      $Global:Hostname = Read-Host "Enter The New Hostname"
+      Set-Hostname
+      Set-DNS
       Get-TitleScreen
-}
 
+  }
 
-elseif ($Choice -eq "8") {
+  elseif ($UserChoice -eq "4") {
+      $Global:HostDomain = Read-Host "Enter Domain Name (Default $Forest)"
 
-    Set-OUPath
-    Add-TopOU
-    Add-OUStructure
-    Add-GPOStructure
-    Add-GPOValues
-    Add-OUUsers
-    Add-ADGroup
-    Add-DriveProperties
-    Add-NetworkSettingsDrivePath
-    Set-PasswordPolicy
-    Set-ComputerPath
-    Set-DHCPRole
-    Get-TitleScreen
+      if ($HostDomain -eq ""){
+        $Global:HostDomain = "$Forest"
+      }
+      Add-Host
+      Get-TitleScreen
+  }
 
-}
-
-elseif ($Choice -eq "9") {
-    Add-DHCPFailover
-    Get-TitleScreen
-}
-
-elseif ($Choice -eq "10") {
- set-executionpolicy remotesigned -Force
- $Global:Hostname = Read-Host "Enter The New Hostname"
- Set-Hostname
- Set-DNS
- Get-TitleScreen
-
-}
-
-elseif ($Choice -eq "11") {
-    $Global:HostDomain = Read-Host "Enter Domain Name (Default $Forest)"
-
-    if ($HostDomain -eq ""){
-      $Global:HostDomain = "$Forest"
-    }
-    Add-Host
-    Get-TitleScreen
-}
-
-elseif ($Choice -eq "12") {
-    Get-ToolsMenu
-}
-elseif ($Choice -eq "13") {
-    Exit
-}
+  elseif ($UserChoice -eq "5") {
+      Get-ToolsMenu
+  }
+  elseif ($UserChoice -eq "6") {
+      Exit
+  }
 
 }
 
@@ -953,24 +890,24 @@ elseif ($Choice -eq "13") {
 
 
 
-function Get-ToolsMenu{
+function Get-ToolFunctions{
 
-    if ($Choice -eq "1"){
+    if ($UserChoice -eq "1"){
         set-executionpolicy remotesigned -Force
         Get-ToolsMenu
 
 
     }
 
-    elseif ($Choice -eq "2"){
-    $Global:HostIP = Read-Host "Enter IPv4 Address"
-    $Global:SecondaryIP = Read-Host "Enter Secondary DNS"
-    Add-NetworkSettings
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "2"){
+        $Global:HostIP = Read-Host "Enter IPv4 Address"
+        $Global:SecondaryIP = Read-Host "Enter Secondary DNS"
+        Add-NetworkSettings
+        Get-ToolsMenu
 
     }
 
-    elseif ($Choice -eq "3"){
+    elseif ($UserChoice -eq "3"){
         $Global:Hostname = Read-Host "Enter The New Hostname"
         Set-Hostname
         Restart-Computer
@@ -979,65 +916,260 @@ function Get-ToolsMenu{
 
     }
 
-    elseif ($Choice -eq "4"){
-    $Global:HostDomain = Read-Host "Enter Domain Name"
-    Add-Host
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "4"){
+        $Global:HostDomain = Read-Host "Enter Domain Name"
+        Add-Host
+        Get-ToolsMenu
 
     }
 
-    elseif ($Choice -eq "5"){
-    Add-SecondaryADRoles
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "5"){
+        Add-SecondaryADRoles
+        Get-ToolsMenu
     }
 
-    elseif ($Choice -eq "6"){
-    Set-FWPermissions
-    Get-ToolsMenu
-
-    }
-
-    elseif ($Choice -eq "7"){
-    Set-DNSRecords
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "6"){
+        Set-FWPermissions
+        Get-ToolsMenu
 
     }
 
-    elseif ($Choice -eq "8"){
-       Set-DNSRecords
-       Get-ToolsMenu
+    elseif ($UserChoice -eq "7"){
+        Set-DNSRecords
+        Get-ToolsMenu
+
     }
 
-    elseif ($Choice -eq "9"){
+    elseif ($UserChoice -eq "8"){
+        Set-DNSRecords
+        Get-ToolsMenu
+    }
+
+    elseif ($UserChoice -eq "9"){
         Add-DHCPFailover
         Get-ToolsMenu
     }
 
-    elseif ($Choice -eq "10"){
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "10"){
+        Get-ToolsMenu
 
     }
-    elseif ($Choice -eq "11"){
-    Get-ToolsMenu
-
-    }
-
-    elseif ($Choice -eq "12"){
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "11"){
+        Get-ToolsMenu
 
     }
 
-    elseif ($Choice -eq "13"){
-    Get-ToolsMenu
+    elseif ($UserChoice -eq "12"){
+        Get-ToolsMenu
 
     }
 
-    elseif ($Choice -eq "Back" -or $Choice -eq "back"){
-            Get-TitleScreen
+    elseif ($UserChoice -eq "13"){
+        Get-ToolsMenu
 
-        }
+    }
+
+    elseif ($UserChoice -eq "Back" -or $UserChoice -eq "back"){
+        Get-TitleScreen
+
+    }
 
 }
+
+
+#######################  Automation Menu functions ##################################
+
+
+
+function Get-HostSettings{
+
+  foreach ($Line in $Basefile){
+
+    if ($env:computername -eq $Line.Hostname){
+      
+      [int] $Global:DeviceSelection = ($Line.Index - 1)
+
+      if ($Basefile.Server[$DeviceSelection] -eq "Primary"){
+        $Global:SecHostname = $Basefile.Hostname[$DeviceSelection + 1]
+        $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection + 1]
+        }
+      elseif ($Basefile.Server[$DeviceSelection] -eq "Secondary") {
+        $Global:SecHostname = $Basefile.Hostname[$DeviceSelection -1 ]
+        $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection - 1 ]
+      }
+      else{
+        $Global:SecHostname = ""
+        $Global:SecondaryIP = ""
+      }
+
+      $Global:HostIP = $Basefile.IPV4[$DeviceSelection]
+      $Global:Hostname = $Basefile.Hostname[$DeviceSelection]
+      $GLobal:Subnet = $Basefile.Subnet[$DeviceSelection]
+      $Global:GatewayIP = $Basefile.Gateway[$DeviceSelection]
+      $Global:Mask = $Basefile.Mask[$DeviceSelection]
+      $Global:DHCPStart = $Basefile.DHCPStart[$DeviceSelection]
+      $Global:DHCPEnd = $Basefile.DHCPEnd[$DeviceSelection]
+      $Global:VPNStart = $Basefile.VPNStart[$DeviceSelection]
+      $Global:VPNEnd = $Basefile.VPNEnd[$DeviceSelection]
+      $Global:Roles = $Basefile.Roles[$DeviceSelection]
+      $Global:ServerRole = $Basefile.Server[$DeviceSelection]
+      $Global:NetworkID = $Basefile.NetworkID[$DeviceSelection]
+
+      }
+    }
+  }
+
+
+function Get-AutomationFunctions{
+
+  if ($Userchoice -eq "1"){
+      $Basefile | ft Index, Hostname, IPv4, Roles, Server
+
+      try{
+
+      $DeviceSelection = Read-Host "Enter the Index of the Device to Load the Settings"
+      $DeviceSelection -= 1
+
+      $Global:HostIP = $Basefile.IPV4[$DeviceSelection]
+      $Global:Hostname = $Basefile.Hostname[$DeviceSelection]
+      $GLobal:Subnet = $Basefile.Subnet[$DeviceSelection]
+      $Global:GatewayIP = $Basefile.Gateway[$DeviceSelection]
+      $Global:Mask = $Basefile.Mask[$DeviceSelection]
+      $Global:DHCPStart = $Basefile.DHCPStart[$DeviceSelection]
+      $Global:DHCPEnd = $Basefile.DHCPEnd[$DeviceSelection]
+      $Global:VPNStart = $Basefile.VPNStart[$DeviceSelection]
+      $Global:VPNEnd = $Basefile.VPNEnd[$DeviceSelection]
+      $Global:Roles = $Basefile.Roles[$DeviceSelection]
+      $Global:ServerRole = $Basefile.Server[$DeviceSelection]
+      $Global:NetworkID = $Basefile.NetworkID[$DeviceSelection]
+      }
+
+      catch{
+
+          Write-Warning "Oh darn, Something Went Wrong With the Configuration"
+      }
+      finally{
+
+          Get-DeploymentMenu
+      }
+      
+  }
+}
+
+  elseif ($Userchoice -eq "2"){
+
+    $ManualInputs = Read-host "Are you sure you want to enter everything? (y/n)"
+
+    if ($ManualInputs -eq "y" -or $ManualInputs -eq "Y"){
+
+      $Global:HostIP = Read-Host "Enter the Host IP"
+      $Global:SecondaryIP = Read-Host "Enter the Secondary IP"
+      $Global:Hostname = Read-Host "Enter the Hostname"
+      $Global:SecHostname = Read-Host "Enter the Secondary Hostname"
+      $GLobal:Subnet = Read-Host "Enter the Subnet Mask"
+      $Global:GatewayIP = Read-Host "Enter the Gateway IP"
+      $Global:Mask = Read-Host "Enter the Mask /xx "
+      $Global:DHCPStart = Read-Host "Enter the DHCP Scope Start"
+      $Global:DHCPEnd = Read-Host "Enter the DHCP Scope End"
+      $Global:VPNStart = Read-Host "Enter the VPN Scope Start"
+      $Global:VPNEnd = Read-Host "Enter the VPN Scope End"
+      Get-DeploymentMenu
+  }
+
+
+  elseif ($Userchoice -eq "3"){
+      Add-NetworkSettings
+      Set-Hostname
+      Disable-IPv6
+      Restart-Computer
+      Get-DeploymentMenu
+   }
+
+  elseif ($Userchoice -eq "4") {
+
+       if ($Serverrole -eq "Primary"){
+
+          Add-PrimaryADRoles
+          Set-FWPermissions
+          Set-DHCPRole
+          Get-DeploymentMenu
+      }
+
+      elseif ($Serverrole -eq "Secondary"){
+
+          Add-SecondaryADRoles
+          Set-FWPermissions
+          $NetBios = Read-Host "Enter the NETBIOS"
+          Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "$NetBios\Administrator")
+          Get-DeploymentMenu
+      }
+
+      elseif ($Serverrole -eq "RAS"){
+        Get-DeploymentMenu
+      }
+  }
+
+  elseif ($Userchoice -eq "5") {
+      Set-DNSRecords
+      Get-DeploymentMenu
+    }
+    
+    
+  elseif ($Userchoice -eq "6") {
+      Set-DNSSecondary
+      Get-DeploymentMenu
+    }
+
+
+  elseif ($Userchoice -eq "7") {
+
+      Set-OUPath
+      Add-TopOU
+      Add-OUStructure
+      Add-GPOStructure
+      Add-GPOValues
+      Add-OUUsers
+      Add-ADGroup
+      $Drivesetup = Read-Host "Setup and map Network Drives Attached to the Server? (y/n)"
+
+      if ($Drivesetup -eq "y" -or $Drivesetup -eq "Y"){
+        Add-DriveProperties
+        Add-NetworkSettingsDrivePath
+      }
+
+      Set-PasswordPolicy
+      Set-ComputerPath
+      Set-DHCPRole
+      Get-DeploymentMenu
+  
+  }
+
+  elseif ($Userchoice -eq "8"){
+      Add-DHCPFailover
+      Get-DeploymentMenu
+  }
+
+  elseif ($Userchoice -eq "9"){
+
+      Get-DeploymentMenu
+  }
+
+  elseif ($Userchoice -eq "10"){
+
+      Get-DeploymentMenu
+  }
+
+  elseif ($Userchoice -eq "Back" -or $Userchoice -eq "back"){
+          Get-TitleScreen
+
+      }
+      
+  else{
+    Get-DeploymentMenu
+  }
+
+}
+
 
 function Get-TitleScreen { Write-Host `
      "
@@ -1059,39 +1191,51 @@ function Get-TitleScreen { Write-Host `
                                                              ░ ░     
 
             Author: Vesec
-            V.0.2
+            V.0.4
 
             ---------------Windows Server Tools-------------------
+            ------------------------------------------------------
 
-            Tools:
+                    Tools:
 
-            1.  Create VM Host or Server
-            2.  Set Static Default Settings Server ($Hostname)
-            3.  Set Static Default Settings Server ($SecHostname)
-            4.  Setup Roles Primary Domain Controller ($Hostname)
-            5.  Setup Roles Secondary Domain Controller ($SecHostname)
-            6.  Setup Primary DNS Records ($Hostname)
-            7.  Start DNS Zone Transfer ($SecHostname)
-            8.  Build AD DS Structure ($Hostname)
-            9.  Create DHCP Failover ($Hostname) -Buggy
-            10. Set Static Default Settings Host (PC)
-            11. Add a Host Machine To a Domain (PC)
-            12. Standalone Setup Tools (Incomplete)
-            13. Exit
+                    --------------------------------------
+                    ------------SERVER TOOLS--------------
+                    
+                    1. Create VM Host or Server
+                    2. Automation Tools Menu
 
 
+                    --------------------------------------
+                    -----------DOMAIN PC TOOLS------------
+
+                    3. Set Static Default Settings Host PC
+                    4. Add a Host PC To a Domain
+
+
+                    --------------------------------------
+                    -------------EXTRA TOOLS---------------
+
+                    5. Standalone Setup Tools (Incomplete)
+                    6. Exit
+
+                    
 "
 
-Get-Selection
-Main-Selection
+Get-UserSelection
+Get-TitleFunctions
 }
 
 
 
 function Get-ToolsMenu{ Write-Host "
 
-            ---------------Standalone Tools----------------------
 
+
+
+
+
+            ---------------Standalone Tools----------------------
+            -----------------------------------------------------
             Type Back to Return to Automatic Deployment Tools
 
             Tools:
@@ -1113,15 +1257,65 @@ function Get-ToolsMenu{ Write-Host "
             15. Activate a Drive
 
 "
-Get-Selection
-Get-ToolsMenu
+Get-UserSelection
+Get-ToolFunctions
 
 }
 
+function Get-DeploymentMenu{ 
+Get-HostSettings
 
-function Get-Selection {
-  $Global:Choice = Read-Host "Selection "
+  Write-Output "
+        ---------------Current Loaded Settings-------------------
+        ---------------------------------------------------------
 
+                   Hostname: $Hostname
+
+                Server Role: $ServerRole
+
+                         IP: $HostIP
+
+                     Forest: $Forest
+
+                      Roles: $Roles
+
+                 DHCP Scope: $DHCPStart - $DHCPEnd
+
+                  VPN Scope: $VPNStart - $VPNEnd
+
+                    Partner: $Sechostname
+
+            ----------------------------------------------
+            -------------SERVER CONFIGURATION ------------
+
+                1.  Select a Pre-built Server Configuration
+                2.  Manually Set all Server Config Variables
+                3.  Set Static Default Settings for the Server
+                4.  Install and Configure Server Roles
+
+            ----------------------------------------------
+            --------------DOMAIN CONTROLLER---------------
+
+                5.  Set Primary DNS Records
+                6.  Start a DNS Zone Transfer
+                7.  Build the AD-DS Structure from Configs
+                8.  Create a DHCP Failover
+
+            -----------------------------------------------
+            ----------------SPECIAL ROLES------------------
+
+                9.  Start RAS Setup
+               10.  Start DFS Setup
+
+"
+Get-UserSelection
+Get-AutomationFunctions
+
+
+}
+
+function Get-UserSelection {
+  $Global:UserChoice = Read-Host "Selection "
 }
 
 
