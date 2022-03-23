@@ -161,11 +161,20 @@ General notes
             $Global:VMRam = 0 + 4GB
           }
 
+          else{
+
+            $Global:VMRam = 0 + 2GB
+          }
+
           Add-UserVM
+
+          if ($VMCreated -ne 0){
           Write-Host "
           
           
           VM Created at Path $VMPath"
+        }
+
 
 }
 }
@@ -188,18 +197,27 @@ General notes
 
 
 try{
-  New-VM -Name $VMName -Path $VMPath -MemoryStartupBytes $VMRam -Generation 2 -Switchname "External Virtual Switch"
-  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes $VMHDDSize
-  Add-VMDvdDrive -VMName $VMName -Path $Imagepath
-  Set-VMProcessor $VMname -Count $VMCores -Reserve 10 -Maximum 75
-  Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath
+  New-VM -Name $VMName -Path $VMPath -MemoryStartupBytes $VMRam -Generation 2 -Switchname "External Virtual Switch" -ErrorAction SilentlyContinue
+  New-VHD -Path "$VHDPath" -Dynamic -SizeBytes $VMHDDSize-ErrorAction SilentlyContinue
+  Add-VMDvdDrive -VMName $VMName -Path $Imagepath -ErrorAction SilentlyContinue
+  Set-VMProcessor $VMname -Count $VMCores -Reserve 10 -Maximum 75 -ErrorAction SilentlyContinue
+  Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $VHDPath -ErrorAction SilentlyContinue
   Set-BootOrder
 
   $NetDrives = Read-Host "Create and Attach CSV Specified Drives for Network Storage?"
 
   }
 
-Catch{ Write-Host "You Might need Elevated privileges"}
+Catch{ 
+
+  Write-Warning "
+  
+  
+  Whoops, Looks like You Might need Elevated privileges" -WarningAction Inquire
+  $Global:VMCreated = 0
+
+
+}
 
 if ($NetDrives -eq "Y"){
   Make-NetDrives
@@ -213,6 +231,7 @@ if ($NetDrives -eq "Y"){
 function Set-BootOrder{
 <#
 .SYNOPSIS
+Sets the boot order for ISO attached VM's.
 
 .DESCRIPTION
 Long description
@@ -588,7 +607,7 @@ General notes
     $OUpath = $OUObject.DistinguishedName
 
     ## User Check
-    if (Get-ADUser -F { SamAccountName -EQ $EmployeeID }) {
+    if (Get-ADUser -F { SamAccountName -eq $EmployeeID }) {
       Write-Warning "A user account with username $Username already exist in Active Directory."
     }
 
@@ -910,7 +929,11 @@ elseif ($Choice -eq "10") {
 }
 
 elseif ($Choice -eq "11") {
-    $Global:HostDomain = Read-Host "Enter Domain Name"
+    $Global:HostDomain = Read-Host "Enter Domain Name (Default $Forest)"
+
+    if ($HostDomain -eq ""){
+      $Global:HostDomain = "$Forest"
+    }
     Add-Host
     Get-TitleScreen
 }
