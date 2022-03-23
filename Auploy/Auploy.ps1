@@ -239,7 +239,7 @@ Set-VMFirmware -VMName $VMname -BootOrder $DVD,$VHD,$Network
 function Make-NetDrives{
 <#
 .SYNOPSIS
-Short description
+Uses the DriveMap.Csv To Create the Specified Network Drives. 
 
 .DESCRIPTION
 Long description
@@ -252,20 +252,20 @@ General notes
 #>
 
   if ($NetDrives -eq "Y"){
-    $i = 0
+  
     foreach ($Drive in $Drivemap){
         
-        $NetworkDrive = "$VMPath" + "$Drive.Groups[$i]" + ".Vhdx"
+        $NetworkDrive = "$VMPath" + $Drive.Name + ".Vhdx"
         New-VHD -Path "$NetworkDrive" -Dynamic -SizeBytes $VMHDDSize
         Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $NetworkDrive
-        $i++
+
         }
 }
 
 }
 
 
-function Add-Network{
+function Add-NetworkSettings{
 <#
 .SYNOPSIS
 Short description
@@ -359,7 +359,7 @@ function Add-SecondaryADRoles {
 function Set-DNSSecondary{
 
   $Stall = Read-Host "Press [Enter] When You are Ready For The DNS Zone Transfer"
-  Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
+  #Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
   Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name "$Forest" -ZoneFile "$Forest"
   Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $DNSReverse -ZoneFile $DNSReverse
   Get-DnsServerZone
@@ -376,7 +376,7 @@ function Set-DHCPRole {
 
   Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $HostIP
   Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
-  Add-DhcpServerv4Scope -Name "$Top Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet
+  Add-DhcpServerv4Scope -Name "$TopOU Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet
 
 }
 
@@ -472,7 +472,7 @@ General notes
 
 }
 
-function Make-TopOU{
+function Add-TopOU{
 
   New-ADOrganizationalUnit -Name $TopOU -Path "$Top,$Space,$Root" -ProtectedFromAccidentalDeletion $False
 
@@ -480,7 +480,7 @@ function Make-TopOU{
 }
 
 
-function Make-OUStructure {
+function Add-OUStructure {
 
 <#
 .SYNOPSIS
@@ -619,7 +619,7 @@ General notes
 }
 
 
-function Make-GPOStructure {
+function Add-GPOStructure {
 
 <#
 .SYNOPSIS
@@ -773,7 +773,7 @@ function Add-DriveProperties{
   diskpart.exe /s "$AuployPath\Settings\Drives\ActivateDrives.txt"
 }
 
-function Add-NetworkDrivePath{
+function Add-NetworkSettingsDrivePath{
   New-smbshare -Name "HR" -Path "H:\" -ChangeAccess "Executives", "HR", "IT Admin", "Administration"  -NoAccess "KEL\20220008", "KEL\20220009"
   New-smbshare -Name "Finance" -Path "F:\" -ChangeAccess "Executives", "IT Admin" -NoAccess "KEL\20220007", "KEL\20220009"
   New-smbshare -Name "Internal" -Path "I:\" -ChangeAccess "Executives", "Employees", "IT Admin", "IT Tech", "Administration", "HR"
@@ -823,7 +823,7 @@ elseif ($Choice -eq "2") {
     $Global:HostIP = $Basefile.IPV4[0]
     $Global:SecondaryIP = $Basefile.IPV4[1]
     $Global:Hostname = $Basefile.Hostname[0]
-    Add-Network
+    Add-NetworkSettings
     Set-Hostname
     Disable-IPv6
     Restart-Computer
@@ -835,7 +835,7 @@ elseif ($Choice -eq "3") {
     $Global:HostIP = $Basefile.IPV4[1]
     $Global:SecondaryIP = $Basefile.IPV4[0]
     $Global:Hostname = $Basefile.Hostname[1]
-    Add-Network
+    Add-NetworkSettings
     Set-Hostname
     Disable-IPv6
     Restart-Computer
@@ -880,14 +880,14 @@ elseif ($Choice -eq "7") {
 elseif ($Choice -eq "8") {
 
     Set-OUPath
-    Make-TopOU
-    Make-OUStructure
-    Make-GPOStructure
+    Add-TopOU
+    Add-OUStructure
+    Add-GPOStructure
     Add-GPOValues
     Add-OUUsers
     Add-ADGroup
     Add-DriveProperties
-    Add-NetworkDrivePath
+    Add-NetworkSettingsDrivePath
     Set-PasswordPolicy
     Set-ComputerPath
     Set-DHCPRole
@@ -942,7 +942,7 @@ function Get-ToolsMenu{
     elseif ($Choice -eq "2"){
     $Global:HostIP = Read-Host "Enter IPv4 Address"
     $Global:SecondaryIP = Read-Host "Enter Secondary DNS"
-    Add-Network
+    Add-NetworkSettings
     Get-ToolsMenu
 
     }
@@ -1065,7 +1065,7 @@ Main-Selection
 
 
 
-function Get-ToolsMenu{ "
+function Get-ToolsMenu{ Write-Host "
 
             ---------------Standalone Tools----------------------
 
