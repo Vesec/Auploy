@@ -1054,7 +1054,7 @@ function Get-AutomationFunctions{
       }
       
   }
-}
+
 
   elseif ($Userchoice -eq "2"){
 
@@ -1169,7 +1169,7 @@ function Get-AutomationFunctions{
   }
 
 }
-
+}
 
 function Get-TitleScreen { Write-Host `
      "
