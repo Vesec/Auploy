@@ -1288,24 +1288,24 @@ Get-HostSettings
             ----------------------------------------------
             -------------SERVER CONFIGURATION ------------
 
-                1.  Select a Pre-built Server Configuration
-                2.  Manually Set all Server Config Variables
-                3.  Set Static Default Settings for the Server
-                4.  Install and Configure Server Roles
+            1.  Select a Pre-built Server Configuration
+            2.  Manually Set all Server Config Variables
+            3.  Set Static Default Settings for the Server
+            4.  Install and Configure Server Roles
 
             ----------------------------------------------
             --------------DOMAIN CONTROLLER---------------
 
-                5.  Set Primary DNS Records
-                6.  Start a DNS Zone Transfer
-                7.  Build the AD-DS Structure from Configs
-                8.  Create a DHCP Failover
+            5.  Set Primary DNS Records
+            6.  Start a DNS Zone Transfer
+            7.  Build the AD-DS Structure from Configs
+            8.  Create a DHCP Failover
 
             -----------------------------------------------
             ----------------SPECIAL ROLES------------------
 
-                9.  Start RAS Setup
-               10.  Start DFS Setup
+            9.  Start RAS Setup
+            10.  Start DFS Setup
 
 "
 Get-UserSelection
