@@ -1049,6 +1049,7 @@ function Get-AutomationFunctions{
 
           Write-Warning "Oh darn, Something Went Wrong With the Configuration"
       }
+      
       finally{
 
           Get-DeploymentMenu
@@ -1075,6 +1076,7 @@ function Get-AutomationFunctions{
       $Global:VPNStart = Read-Host "Enter the VPN Scope Start"
       $Global:VPNEnd = Read-Host "Enter the VPN Scope End"
       Get-DeploymentMenu
+  }
   }
 
 
@@ -1164,13 +1166,9 @@ function Get-AutomationFunctions{
           Get-TitleScreen
 
       }
-      
-  else{
-    Get-DeploymentMenu
-  }
 
 }
-}
+
 
 function Get-TitleScreen { Write-Host `
      "
