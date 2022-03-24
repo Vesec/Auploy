@@ -138,14 +138,15 @@ General notes
 
           $Global:VMPath = "$AuployPath\VM's\"
           $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
-          $Global:Imagepath = "C:\ISO's\Win 10 Ent\Windows 10 1903.iso"
+          $Global:Imagepath = "C:\ISO's\Server 2022\20348.169.210806-2348.fe_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso
+          "
 
           }
         elseif ($CurrentMachine -eq "School" -and $Userval -eq "H"){
 
           $Global:VMPath = "$AuployPath\VM's\"
           $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
-          $Global:Imagepath = "C:\ISO's\Server 2019\Windows Server 2019.iso"
+          $Global:Imagepath = "C:\ISO's\Win 10 Ent\Windows 10 1903.iso"
   
             }
 
