@@ -1,6 +1,6 @@
 ﻿Name,Letter,Groups,Exclude
-Finance,F,"Executives, IT Admin",
-HR,H,"Executives, IT Admin, HR, Administration",
-Internal,I,Everyone,
+Finance,F,"Executives,IT Admin","INT\20220007,INT\20220009"
+HR,H,"Executives,IT Admin,HR,Administration","INT\20220008,INT\20220009"
+Internal,I,Domain Users,
 Marketing,M,Executives,
-Z,"IT Admin, IT Tech",
+IT Resources,Z,"IT Admin,IT Tech",

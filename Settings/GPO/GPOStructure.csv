@@ -1,7 +1,6 @@
 ﻿Name,Link
 Block Removable Media Devices,Employees
 No Automatic System Restart,Computers
-Block Computer Settings,"Employees,Executives"
-Executives Drive Access,Executives
-Employee Drive Access,Employees
-IT Drive Access,IT
+Security Settings Policy,"Employees,Executives"
+Drive Access Policy,Users
+Guest Account Policy,Computers

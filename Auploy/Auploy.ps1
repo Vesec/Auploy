@@ -1,8 +1,8 @@
 ﻿<#
 
 Auploy Author: Tyler Dorner
-Version: V.0.2
-Date: 
+Version: V.0.5
+Date: March 24th 2022
 Comments:
 
 #>
@@ -13,7 +13,15 @@ $Global:AuployPath = $Scriptpath -replace ".{$NameLength}$"
 
 
 
-function Get-UsernameInput{
+function Get-AuployPath{
+<#
+.SYNOPSIS
+Detects The Path To Auploy From Expected Location, Prompts User To input Path If Unable To Find Settings.
+
+.DESCRIPTION
+Long description
+
+#>
 
 $Global:AuployPath = Read-Host " 
 
@@ -40,11 +48,12 @@ Enter Enter Path To Folder Containing Auploy"
 
 try{
 
-  $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OU.csv"
+  $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OUStructure.csv"
   $Global:UserFile = Import-Csv "$AuployPath\Users\Users.csv"
   $Global:BaseFile = Import-Csv "$AuployPath\Settings\Host\Basefile.csv"
-  $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOSettings.csv"
+  $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOKeyPolicies"
   $Global:GPOStructure = Import-Csv "$AuployPath\Settings\GPO\GPOStructure.csv"
+  $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.Csv"
   $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
   $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
   }
@@ -55,16 +64,17 @@ catch {
         
       $DesktopPath = [Environment]::GetFolderPath("Desktop")
       $AuployPath = "$DesktopPath\Auploy"
-      $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OU.csv"
+      $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OUStructure.csv"
       $Global:UserFile = Import-Csv "$AuployPath\Users\Users.csv"
       $Global:BaseFile = Import-Csv "$AuployPath\Settings\Host\Basefile.csv"
-      $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOSettings.csv"
+      $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOKeyPolicies"
       $Global:GPOStructure = Import-Csv "$AuployPath\Settings\GPO\GPOStructure.csv"
+      $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.Csv"
       $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
       $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
 
     }
-    catch{Get-UsernameInput}
+    catch{Get-AuployPath}
 
 }
 
@@ -91,7 +101,7 @@ $Global:Roles = $Basefile.Roles[0]
 $Global:ServerRole = $Basefile.Server[0]
 
 
-####################################### Create VM's and Drives ##########################################
+####################################### Create VM's #######################################################
 
 function Get-VMProperties{
 <#
@@ -183,7 +193,6 @@ General notes
 }
 }
 
-
 function Add-UserVM {
 <#
 .SYNOPSIS
@@ -199,8 +208,6 @@ An example
 General notes
 #>
 
-
-
   New-VM -Name $VMName -Path $VMPath -MemoryStartupBytes $VMRam -Generation 2 -Switchname "External Virtual Switch" -ErrorAction SilentlyContinue
   New-VHD -Path "$VHDPath" -Dynamic -SizeBytes $VMHDDSize -ErrorAction SilentlyContinue
   Add-VMDvdDrive -VMName $VMName -Path $Imagepath -ErrorAction SilentlyContinue
@@ -214,27 +221,19 @@ try{
 
   }
 
-
-
-
 catch{ Write-Warning "
   
-  
+
         Whoops, Looks like You Might need Elevated privileges" -WarningAction Inquire
         $Global:VMCreated = 0
             
 }
 
-
-
 if ($NetDrives -eq "Y"){
-  Make-NetDrives
+  Add-NetDrives
 
   }
-
 }
-
-
 
 function Set-BootOrder{
 <#
@@ -263,7 +262,7 @@ Set-VMFirmware -VMName $VMname -BootOrder $DVD,$VHD,$Network
 }
 
 
-function Make-NetDrives{
+function Add-NetDrives{
 <#
 .SYNOPSIS
 Uses the DriveMap.Csv To Create the Specified Network Drives. 
@@ -291,42 +290,10 @@ General notes
 
 }
 
-
-function Add-NetworkSettings{
-<#
-.SYNOPSIS
-Short description
-
-.DESCRIPTION
-Long description
-
-.EXAMPLE
-An example
-
-.NOTES
-General notes
-#>
-
-
-##GRAB INTERFACE INDEX
-$AutoIndex = Get-NetAdapter -Name * -Physical
-[int] $Intindex = $AutoIndex.Interfaceindex
-
-
-##SET STATIC ADDRESS
-New-NetIPAddress -InterfaceIndex $Intindex -IPAddress $HostIP -Prefixlength $Mask `
--DefaultGateway $GatewayIP -AddressFamily IPv4
-
-## SET DNS
-Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
-
-
-}
-
-function Disable-IpV6{
+function Add-NetDrivesPath{
   <#
   .SYNOPSIS
-  Short description
+    Creates a Drive Share for CSV Specified User Groups, and Employs Exclusions.
   
   .DESCRIPTION
   Long description
@@ -338,40 +305,109 @@ function Disable-IpV6{
   General notes
   #>
 
+    foreach ($Drive in $Drivemap){
 
-$IPv6Check = Get-NetAdapterBinding | Where-Object ComponentID -EQ 'ms_tcpip6'
-$IPv6Status = $IPv6Check.enabled
+        $Letter = $Drive.Letter
+        $DriveName = $Drive.Name
 
+        $Groups = ($Drive.Groups).Split(",")
+        $GroupArray = @();$GroupArray += $Groups
+        
+        $Exclusions = ($Drive.Exclude).split(",")
+        $ExclusionArray = @();$ExclusionArray += $Exclusions
+        
+        if ($Drive.Exclude -eq ""){
+        New-smbshare -Name "$DriveName" -Path "${Letter}:\" -ChangeAccess $GroupArray
+        }
+        elseif ($Drive.Exclude -ne ""){
+        New-smbshare -Name "$DriveName" -Path "${Letter}:\" -ChangeAccess $GroupArray -NoAccess $ExclusionArray
+        }
+        
+    
+    }
+  }
 
-if ($IPv6Status -eq $True){
-
-Disable-NetAdapterBinding -Name 'Ethernet' -ComponentID 'ms_tcpip6'
-
-}
-
-}
-
-
-function Set-HostName{
-
-Rename-Computer -NewName "$Global:Hostname"
-
-}
-
-function Set-DNS{
-
-Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
-
-}
+  function Add-DriveProperties{
+    diskpart.exe /s "$AuployPath\Settings\Drives\ActivateDrives.txt"
+  }
 
 
 ####################################### Setup Roles and Static Settings ##########################################
 
+function Set-HostName{
+
+  Rename-Computer -NewName "$Global:Hostname"
+  
+  }
+  
+  function Set-DNS{
+  
+  Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
+  
+  }
+
+  function Disable-IpV6{
+    <#
+    .SYNOPSIS
+    Short description
+    
+    .DESCRIPTION
+    Long description
+    
+    .EXAMPLE
+    An example
+    
+    .NOTES
+    General notes
+    #>
+  
+  
+  $IPv6Check = Get-NetAdapterBinding | Where-Object ComponentID -EQ 'ms_tcpip6'
+  $IPv6Status = $IPv6Check.enabled
+  
+  
+  if ($IPv6Status -eq $True){
+  
+  Disable-NetAdapterBinding -Name 'Ethernet' -ComponentID 'ms_tcpip6'
+  
+  }
+  
+  }
+
+  function Add-NetworkSettings{
+    <#
+    .SYNOPSIS
+    Short description
+    
+    .DESCRIPTION
+    Long description
+    
+    .EXAMPLE
+    An example
+    
+    .NOTES
+    General notes
+    #>
+    
+    
+    ##GRAB INTERFACE INDEX
+    $AutoIndex = Get-NetAdapter -Name * -Physical
+    [int] $Intindex = $AutoIndex.Interfaceindex
+    
+    
+    ##SET STATIC ADDRESS
+    New-NetIPAddress -InterfaceIndex $Intindex -IPAddress $HostIP -Prefixlength $Mask `
+    -DefaultGateway $GatewayIP -AddressFamily IPv4
+    
+    ## SET DNS
+    Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
+    }
 function Add-PrimaryADRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
-  Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force ## Type Failure???
+  #Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication – IncludeManagementTools
+  Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force -DomainNetBiosName "Raudz"
 
 }
 
@@ -381,6 +417,7 @@ function Add-SecondaryADRoles {
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name DNS -IncludeManagementTools
+  #Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication – IncludeManagementTools
 }
 
 function Set-DNSSecondary{
@@ -388,7 +425,7 @@ function Set-DNSSecondary{
   $Stall = Read-Host "Press [Enter] When You are Ready For The DNS Zone Transfer"
   #Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
   Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name "$Forest" -ZoneFile "$Forest"
-  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $DNSReverse -ZoneFile $DNSReverse
+  Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $DNSReverse -ZoneFile $DNSReverse ##Needs the Variable supplied from CSV
   Get-DnsServerZone
 }
 
@@ -691,7 +728,19 @@ General notes
 
 
 function Add-GPOValues {
+<#
+.SYNOPSIS
+Short description
 
+.DESCRIPTION
+Long description
+
+.EXAMPLE
+An example
+
+.NOTES
+General notes
+#>
 
 
 
@@ -737,6 +786,35 @@ function Add-GPOValues {
 
 }
 
+function Import-GPOBackup{
+  <#
+  .SYNOPSIS
+  Imports a Previously used GPO from a Specified path.
+  
+  .DESCRIPTION
+  Imports a GPO from its ID and the detected path that the Backups are stored. 
+  The Target Name will match a pre-existing gpo to change its inherent properties.
+  
+  .EXAMPLE
+  An example
+  
+  .NOTES
+  General notes
+  #>
+  $GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.Csv"
+  $GPOID = $GPOBackups.ID
+  $GPOTarget = $GPOBackups.Target
+  
+  
+      foreach ($GPO in $GPOBackups){
+      import-gpo `
+      -BackupId "$GPOID" `
+      -TargetName "$GPOTarget" `
+      -path "$AuployPath\Settings\GPO\GPOBackups.Csv" `
+      -CreateIfNeeded
+  
+      }
+  }
 
 function Add-ADGroup {
 <#
@@ -804,34 +882,7 @@ function Add-DriveProperties{
   diskpart.exe /s "$AuployPath\Settings\Drives\ActivateDrives.txt"
 }
 
-function Add-NetworkSettingsDrivePath{
-  
-  New-smbshare -Name "HR" -Path "H:\" -ChangeAccess "Executives", "HR", "IT Admin", "Administration"  -NoAccess "KEL\20220008", "KEL\20220009"
-  New-smbshare -Name "Finance" -Path "F:\" -ChangeAccess "Executives", "IT Admin" -NoAccess "KEL\20220007", "KEL\20220009"
-  New-smbshare -Name "Internal" -Path "I:\" -ChangeAccess "Executives", "Employees", "IT Admin", "IT Tech", "Administration", "HR"
-  New-smbshare -Name "Marketing" -Path "M:\" -ChangeAccess "Executives", "IT Admin", "IT Tech"
-  New-smbshare -Name "IT Resources" -Path "Z:\" -ChangeAccess "Executives", "IT Admin", "IT Tech"
-  
-
-  <#
-  foreach ($Drive in $Drivemap){
-      $Letter = $Drive.Letter
-      $DriveName = $Drive.Name
-      $Groups = $Drive.Groups
-      $Exclusions = $Drive.Exclude
-      Write-Host $Letter $DriveName $Groups
-
-      if ($Drivemap.Exclude -eq ""){
-      #New-smbshare -Name "$DriveName" -Path "${Letter}:\" -ChangeAccess $Groups
-      }
-      else{
-      #New-smbshare -Name "$DriveName" -Path "${Letter}:\" -ChangeAccess $Groups -NoAccess $Exclusions
-      }
-  }
-  #>
-}
 function Set-ComputerPath{
-
 
 redircmp “OU=Computers,OU=$TopOU,$Top,$Space,$Root”
 
@@ -840,8 +891,6 @@ redircmp “OU=Computers,OU=$TopOU,$Top,$Space,$Root”
 ######################################## Title Menu Functions ############################################
 
 function Get-TitleFunctions{
-
-
 
   if ($UserChoice -eq "1") {
 
@@ -1134,7 +1183,7 @@ function Get-AutomationFunctions{
 
       if ($Drivesetup -eq "y" -or $Drivesetup -eq "Y"){
         Add-DriveProperties
-        Add-NetworkSettingsDrivePath
+        Add-NetDrivesPath
       }
 
       Set-PasswordPolicy
@@ -1288,9 +1337,9 @@ Get-HostSettings
             ----------------------------------------------
             -------------SERVER CONFIGURATION ------------
 
-                1.  Select a Pre-built Server Configuration
-                2.  Manually Set all Server Config Variables
-                3.  Set Static Default Settings for the Server
+                1.  Choose Server Config
+                2.  Manually Create a Server
+                3.  Set Server Pre-Requisites
                 4.  Install and Configure Server Roles
 
             ----------------------------------------------
