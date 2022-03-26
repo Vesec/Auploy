@@ -447,12 +447,13 @@ function Set-HostDNSSecondary{
 function Set-PrimaryDHCPRole {
 
   Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $HostIP
-  #Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
   Add-DhcpServerv4Scope -Name "$TopOU Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet -State Active -LeaseDuration 4.00:00:00
 
 }
 
 function Add-DHCPFailover{
+
+Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
 
 Add-DhcpServerv4Failover `
 -ComputerName $Hostname `
@@ -812,7 +813,7 @@ function Import-GPOBackup{
   .NOTES
   General notes
   #>
-  $GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.Csv"
+
   $GPOID = $GPOBackups.ID
   $GPOTarget = $GPOBackups.Target
   
@@ -821,7 +822,7 @@ function Import-GPOBackup{
       import-gpo `
       -BackupId "$GPOID" `
       -TargetName "$GPOTarget" `
-      -path "$AuployPath\Settings\GPO\GPOBackups.Csv" `
+      -path "$AuployPath\Settings\GPO\Backups\GPOBackups.Csv" `
       -CreateIfNeeded
   
       }
@@ -1204,6 +1205,7 @@ function Get-AutomationFunctions{
       Set-ComputerPath
       Import-GPOBackup
       Add-NetworkFiles
+      Write-Warning "All Users, OU's and GPO's have been Created Successfully"
       Get-DeploymentMenu
   
   }
