@@ -2,7 +2,7 @@
 $Global:UserID = $env:Username
 
 $Global:FinanceExclusion = "20220007","20220009"
-$Global:HRExclusion = "20220018","20220019"
+$Global:HRExclusion = "20220018","20220019","20220009","20220008"
 $GLobal:MarketingExclusions = @()
 $Global:ITResourcesExclusions = @()
 $Global:InternalExclusions = @()
@@ -22,11 +22,11 @@ Date: Mar 26th 2022
 #>
 
 
-if ($UserID -gt 20220000 -and $UserID -lt 2022010){
+if ($UserID -gt 20220000 -and $UserID -lt 20220010){
     $Global:DriveArray = "HR","Finance","Internal","Marketing"
 }
 
-elseif ($UserID -gt 2022009 -and $UserID -lt 20220014){
+elseif ($UserID -gt 20220009 -and $UserID -lt 20220014){
     $Global:DriveArray = "HR","Internal"
 }
 
@@ -61,33 +61,35 @@ Date: Mar 26th 2022
 
 #>
 
+
 $Shell = New-Object -com Shell.Application
 
-If ($UserID -notin $FinanceExclusions -and "Finance" -in $DriveArray){
+If ($UserID -notin $FinanceExclusion -and "Finance" -in $DriveArray){
         New-SmbMapping -LocalPath 'F:' -RemotePath '\\DC01-Kelowna\Finance'
         $Shell.NameSpace("F:\").Self.Name = 'Finance'
     }
     
-If ($UserID -notin $HRExclusions -and "HR" -in $DriveArray){
+If ($UserID -notin $HRExclusion -and "HR" -in $DriveArray){
+
         New-SmbMapping -LocalPath 'H:' -RemotePath '\\DC01-Kelowna\HR'
         $Shell.NameSpace("H:\").Self.Name = 'Human Resources'  
     }
 
-If ($UserID -notin $InternalExclusions -and "Internal" -in $DriveArray){
+If ($UserID -notin $InternalExclusion -and "Internal" -in $DriveArray){
         New-SmbMapping -LocalPath 'I:' -RemotePath '\\DC01-Kelowna\Internal'
         $Shell.NameSpace("I:\").Self.Name = 'Internal'  
     }
 
-If ($UserID -notin $MarketingExclusions -and "Marketing" -in $DriveArray){
+If ($UserID -notin $MarketingExclusion -and "Marketing" -in $DriveArray){
         New-SmbMapping -LocalPath 'M:' -RemotePath '\\DC01-Kelowna\Marketing'
         $Shell.NameSpace("M:\").Self.Name = 'Marketing'  
     }
 
-If ($UserID -notin $ITResourcesExclusions -and "IT Resources" -in $DriveArray){
+If ($UserID -notin $ITResourcesExclusion -and "IT Resources" -in $DriveArray){
         New-SmbMapping -LocalPath 'Z:' -RemotePath '\\DC01-Kelowna\IT Resources'
         $Shell.NameSpace("Z:\").Self.Name = 'IT Resources'  
     }
-
+    
 }
 
 Get-UserGroup

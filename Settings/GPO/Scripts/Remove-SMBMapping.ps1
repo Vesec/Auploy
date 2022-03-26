@@ -1,0 +1,1 @@
+﻿remove-smbmapping -InputObject (Get-Smbmapping) -Force

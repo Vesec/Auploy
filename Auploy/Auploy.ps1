@@ -78,9 +78,7 @@ catch {
 
 }
 
-
-$Global:TopOU = $Basefile.TopOU[0]
-$Global:Password = $Basefile.Password[0]
+<#
 $Global:HostIP = $Basefile.IPV4[0]
 $Global:SecondaryIP = $Basefile.IPV4[1]
 $Global:Hostname = $Basefile.Hostname[0]
@@ -88,17 +86,22 @@ $Global:SecHostname = $Basefile.Hostname[1]
 $GLobal:Subnet = $Basefile.Subnet[0]
 $Global:GatewayIP = $Basefile.Gateway[0]
 $Global:Mask = $Basefile.Mask[0]
-$Global:VMHDDSize = 0 + 120GB
 $Global:DHCPStart = $Basefile.DHCPStart[0]
 $Global:DHCPEnd = $Basefile.DHCPEnd[0]
 $Global:DNSReverse = $Basefile.NetworkID[0]
-$Global:Forest = $Basefile.Forest[0]
-$Global:VMSwitch = $Basefile.Switch[0]
 $Global:VPNStart = $Basefile.VPNStart[0]
 $Global:VPNEnd = $Basefile.VPNEnd[0]
 [int32] $Global:DHCPPercent = $Basefile.Percent[0]
 $Global:Roles = $Basefile.Roles[0]
 $Global:ServerRole = $Basefile.Server[0]
+
+#>
+
+$Global:TopOU = $Basefile.TopOU[0]
+$Global:Password = $Basefile.Password[0]
+$Global:VMHDDSize = 0 + 120GB
+$Global:Forest = $Basefile.Forest[0]
+$Global:VMSwitch = $Basefile.Switch[0]
 
 
 ####################################### Create VM's #######################################################
@@ -446,14 +449,14 @@ function Set-HostDNSSecondary{
 
 function Set-PrimaryDHCPRole {
 
-  Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $HostIP
+  Add-DhcpServerInDC -DnsName "$Forest" -IPAddress $HostIP
   Add-DhcpServerv4Scope -Name "$TopOU Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet -State Active -LeaseDuration 4.00:00:00
 
 }
 
 function Add-DHCPFailover{
 
-Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
+Add-DhcpServerInDC -DnsName "$Forest" -IPAddress $SecondaryIP
 
 Add-DhcpServerv4Failover `
 -ComputerName $Hostname `
@@ -634,7 +637,8 @@ Make sure the CSV file is correctly Formatted for the OU Structure before import
 }
 
 function Add-NetworkFiles{
-  Copy-Item -Path "$AuployPath\Settings\GPO\Scripts\SMB Mapping.ps1" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\scripts"
+  Copy-Item -Path "$AuployPath\Settings\GPO\Scripts\Create-SMBMapping.ps1" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\scripts"
+  Copy-Item -Path "$AuployPath\Settings\GPO\Scripts\Remove-SMBMapping.ps1" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\scripts"
   Copy-Item -Path "$AuployPath\Settings\GPO\Wallpaper" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\Wallpaper" -Recurse
 }
 function Add-OUUsers {
@@ -1048,23 +1052,9 @@ function Get-HostSettings{
 
   foreach ($Line in $Basefile){
 
-    if ($env:computername -eq $Line.Hostname){
+    elseif ($env:computername -eq $Line.Hostname){
       
       [int] $Global:DeviceSelection = ($Line.Index - 1)
-
-      if ($Basefile.Server[$DeviceSelection] -eq "Primary"){
-        $Global:SecHostname = $Basefile.Hostname[$DeviceSelection + 1]
-        $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection + 1]
-        }
-      elseif ($Basefile.Server[$DeviceSelection] -eq "Secondary") {
-        $Global:SecHostname = $Basefile.Hostname[$DeviceSelection -1 ]
-        $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection - 1 ]
-      }
-      else{
-        $Global:SecHostname = ""
-        $Global:SecondaryIP = ""
-      }
-
       $Global:HostIP = $Basefile.IPV4[$DeviceSelection]
       $Global:Hostname = $Basefile.Hostname[$DeviceSelection]
       $GLobal:Subnet = $Basefile.Subnet[$DeviceSelection]
@@ -1078,6 +1068,15 @@ function Get-HostSettings{
       $Global:ServerRole = $Basefile.Server[$DeviceSelection]
       $Global:NetworkID = $Basefile.NetworkID[$DeviceSelection]
 
+
+      if ($Basefile.Server[$DeviceSelection] -eq "Primary"){
+        $Global:SecHostname = $Basefile.Hostname[$DeviceSelection + 1]
+        $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection + 1]
+        }
+      elseif ($Basefile.Server[$DeviceSelection] -eq "Secondary") {
+        $Global:SecHostname = $Basefile.Hostname[$DeviceSelection -1 ]
+        $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection - 1 ]
+        }
       }
     }
   }
@@ -1120,30 +1119,7 @@ function Get-AutomationFunctions{
       
   }
 
-
   elseif ($Userchoice -eq "2"){
-
-    $ManualInputs = Read-host "Are you sure you want to enter everything? (y/n)"
-
-    if ($ManualInputs -eq "y" -or $ManualInputs -eq "Y"){
-
-      $Global:HostIP = Read-Host "Enter the Host IP"
-      $Global:SecondaryIP = Read-Host "Enter the Secondary IP"
-      $Global:Hostname = Read-Host "Enter the Hostname"
-      $Global:SecHostname = Read-Host "Enter the Secondary Hostname"
-      $GLobal:Subnet = Read-Host "Enter the Subnet Mask"
-      $Global:GatewayIP = Read-Host "Enter the Gateway IP"
-      $Global:Mask = Read-Host "Enter the Mask /xx "
-      $Global:DHCPStart = Read-Host "Enter the DHCP Scope Start"
-      $Global:DHCPEnd = Read-Host "Enter the DHCP Scope End"
-      $Global:VPNStart = Read-Host "Enter the VPN Scope Start"
-      $Global:VPNEnd = Read-Host "Enter the VPN Scope End"
-      Get-DeploymentMenu
-  }
-  }
-
-
-  elseif ($Userchoice -eq "3"){
       Add-NetworkSettings
       Set-Hostname
       Disable-IPv6
@@ -1151,7 +1127,7 @@ function Get-AutomationFunctions{
       Get-DeploymentMenu
    }
 
-  elseif ($Userchoice -eq "4") {
+  elseif ($Userchoice -eq "3") {
 
        if ($Serverrole -eq "Primary"){
 
@@ -1174,6 +1150,31 @@ function Get-AutomationFunctions{
       }
   }
 
+  elseif ($Userchoice -eq "4") {
+
+    Set-OUPath
+    Add-TopOU
+    Add-OUStructure
+    Add-GPOStructure
+    Add-GPOValues
+    Add-OUUsers
+    Add-ADGroup
+    $Drivesetup = Read-Host "Setup and map Network Drives Attached to the Server? (y/n)"
+
+    if ($Drivesetup -eq "y" -or $Drivesetup -eq "Y"){
+      Add-DriveProperties
+      Add-NetDrivesPath
+    }
+
+    Set-PasswordPolicy
+    Set-ComputerPath
+    Import-GPOBackup
+    Add-NetworkFiles
+    Write-Warning "All Users, OU's and GPO's have been Created Successfully"
+    Get-DeploymentMenu
+
+}
+
   elseif ($Userchoice -eq "5") {
       Set-HostDNSRecords
       Get-DeploymentMenu
@@ -1185,43 +1186,17 @@ function Get-AutomationFunctions{
       Get-DeploymentMenu
     }
 
-
-  elseif ($Userchoice -eq "7") {
-
-      Set-OUPath
-      Add-TopOU
-      Add-OUStructure
-      Add-GPOStructure
-      Add-GPOValues
-      Add-OUUsers
-      Add-ADGroup
-      $Drivesetup = Read-Host "Setup and map Network Drives Attached to the Server? (y/n)"
-
-      if ($Drivesetup -eq "y" -or $Drivesetup -eq "Y"){
-        Add-DriveProperties
-        Add-NetDrivesPath
-      }
-
-      Set-PasswordPolicy
-      Set-ComputerPath
-      Import-GPOBackup
-      Add-NetworkFiles
-      Write-Warning "All Users, OU's and GPO's have been Created Successfully"
-      Get-DeploymentMenu
-  
-  }
-
-  elseif ($Userchoice -eq "8"){
+  elseif ($Userchoice -eq "7"){
       Add-DHCPFailover
       Get-DeploymentMenu
   }
 
-  elseif ($Userchoice -eq "9"){
+  elseif ($Userchoice -eq "8"){
 
       Get-DeploymentMenu
   }
 
-  elseif ($Userchoice -eq "10"){
+  elseif ($Userchoice -eq "9"){
 
       Get-DeploymentMenu
   }
@@ -1351,18 +1326,17 @@ Get-HostSettings
             ----------------------------------------------
             -------------SERVER CONFIGURATION ------------
 
-                1.  Choose Server Config
-                2.  Manually Create a Server
-                3.  Set Server Pre-Requisites
-                4.  Install and Configure Server Roles
+            1.  Choose Server Config
+            2.  Set Server Pre-Requisites
+            3.  Install and Configure Server Roles
 
             ----------------------------------------------
             --------------DOMAIN CONTROLLER---------------
 
+            4.  Build the AD-DS Structure from Configs
             5.  Set Primary DNS Records
             6.  Start a DNS Zone Transfer
-            7.  Build the AD-DS Structure from Configs
-            8.  Create a DHCP Failover
+            7.  Create a DHCP Failover
 
             -----------------------------------------------
             ----------------SPECIAL ROLES------------------
