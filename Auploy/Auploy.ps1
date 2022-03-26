@@ -1052,7 +1052,7 @@ function Get-HostSettings{
 
   foreach ($Line in $Basefile){
 
-    elseif ($env:computername -eq $Line.Hostname){
+    if ($env:computername -eq $Line.Hostname){
       
       [int] $Global:DeviceSelection = ($Line.Index - 1)
       $Global:HostIP = $Basefile.IPV4[$DeviceSelection]
