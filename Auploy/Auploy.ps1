@@ -1336,17 +1336,10 @@ Get-HostSettings
             ----------------------------------------------
             -------------SERVER CONFIGURATION ------------
 
-<<<<<<< HEAD
                 1.  Choose Server Config
                 2.  Manually Create a Server
                 3.  Set Server Pre-Requisites
                 4.  Install and Configure Server Roles
-=======
-            1.  Select a Pre-built Server Configuration
-            2.  Manually Set all Server Config Variables
-            3.  Set Static Default Settings for the Server
-            4.  Install and Configure Server Roles
->>>>>>> 60c03dba7fe148c8a4ce38fdfac29100aec40469
 
             ----------------------------------------------
             --------------DOMAIN CONTROLLER---------------
