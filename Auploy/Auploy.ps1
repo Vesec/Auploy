@@ -148,14 +148,15 @@ General notes
 
           $Global:VMPath = "$AuployPath\VM's\"
           $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
-          $Global:Imagepath = "C:\ISO's\Win 10 Ent\Windows 10 1903.iso"
+          $Global:Imagepath = "C:\ISO's\Server 2022\20348.169.210806-2348.fe_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso
+          "
 
           }
         elseif ($CurrentMachine -eq "School" -and $Userval -eq "H"){
 
           $Global:VMPath = "$AuployPath\VM's\"
           $Global:VHDPath = "$AuployPath\$VMname\$VMname" + ".vhdx"
-          $Global:Imagepath = "C:\ISO's\Server 2019\Windows Server 2019.iso"
+          $Global:Imagepath = "C:\ISO's\Win 10 Ent\Windows 10 1903.iso"
   
             }
 
@@ -1097,13 +1098,14 @@ function Get-AutomationFunctions{
 
           Write-Warning "Oh darn, Something Went Wrong With the Configuration"
       }
+      
       finally{
 
           Get-DeploymentMenu
       }
       
   }
-}
+
 
   elseif ($Userchoice -eq "2"){
 
@@ -1123,6 +1125,7 @@ function Get-AutomationFunctions{
       $Global:VPNStart = Read-Host "Enter the VPN Scope Start"
       $Global:VPNEnd = Read-Host "Enter the VPN Scope End"
       Get-DeploymentMenu
+  }
   }
 
 
@@ -1212,10 +1215,6 @@ function Get-AutomationFunctions{
           Get-TitleScreen
 
       }
-      
-  else{
-    Get-DeploymentMenu
-  }
 
 }
 
@@ -1337,24 +1336,31 @@ Get-HostSettings
             ----------------------------------------------
             -------------SERVER CONFIGURATION ------------
 
+<<<<<<< HEAD
                 1.  Choose Server Config
                 2.  Manually Create a Server
                 3.  Set Server Pre-Requisites
                 4.  Install and Configure Server Roles
+=======
+            1.  Select a Pre-built Server Configuration
+            2.  Manually Set all Server Config Variables
+            3.  Set Static Default Settings for the Server
+            4.  Install and Configure Server Roles
+>>>>>>> 60c03dba7fe148c8a4ce38fdfac29100aec40469
 
             ----------------------------------------------
             --------------DOMAIN CONTROLLER---------------
 
-                5.  Set Primary DNS Records
-                6.  Start a DNS Zone Transfer
-                7.  Build the AD-DS Structure from Configs
-                8.  Create a DHCP Failover
+            5.  Set Primary DNS Records
+            6.  Start a DNS Zone Transfer
+            7.  Build the AD-DS Structure from Configs
+            8.  Create a DHCP Failover
 
             -----------------------------------------------
             ----------------SPECIAL ROLES------------------
 
-                9.  Start RAS Setup
-               10.  Start DFS Setup
+            9.  Start RAS Setup
+            10.  Start DFS Setup
 
 "
 Get-UserSelection
