@@ -1385,5 +1385,4 @@ function Get-UserSelection {
 ######## LOAD MENU ##########
 
 
-#Get-TitleScreen
-Import-GPOBackup
+Get-TitleScreen
