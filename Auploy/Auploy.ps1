@@ -458,13 +458,13 @@ function Add-DHCPFailover{
 
 Add-DhcpServerInDC -DnsName "$Forest" -IPAddress $SecondaryIP
 
+
 Add-DhcpServerv4Failover `
--ComputerName $Hostname `
--Name "Network" `
--PartnerServer $SecHostname `
--ScopeId $DHCPStart,$DHCPEnd `
+-ComputerName "$SecHostname.$Forest" `
+-Name "$TopOU Network" `
+-PartnerServer "$Hostname.$Forest" `
+-ScopeId $ScopeID `
 -LoadBalancePercent 50 `
--SharedSecret "$Password" `
 -MaxClientLeadTime 2:00:00 `
 -AutoStateTransition $True `
 -StateSwitchInterval 2:00:00
@@ -1072,10 +1072,12 @@ function Get-HostSettings{
       if ($Basefile.Server[$DeviceSelection] -eq "Primary"){
         $Global:SecHostname = $Basefile.Hostname[$DeviceSelection + 1]
         $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection + 1]
+        $Global:ScopeID = $Basefile.ScopeID[$DeviceSelection]
         }
       elseif ($Basefile.Server[$DeviceSelection] -eq "Secondary") {
         $Global:SecHostname = $Basefile.Hostname[$DeviceSelection -1 ]
         $Global:SecondaryIP = $Basefile.IPV4[$DeviceSelection - 1 ]
+        $Global:ScopeID = $Basefile.ScopeID[$DeviceSelection - 1]
         }
       }
     }
@@ -1140,6 +1142,7 @@ function Get-AutomationFunctions{
 
           Add-SecondaryDCRoles
           Set-FWPermissions
+          Write-Warning "You Are About To attach To a Primary Domain Controller, Ensure you can NSLookup the Primary before attaching"
           $NetBios = Read-Host "Enter the NETBIOS"
           Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "$NetBios\Administrator")
           Get-DeploymentMenu
@@ -1177,6 +1180,7 @@ function Get-AutomationFunctions{
 
   elseif ($Userchoice -eq "5") {
       Set-HostDNSRecords
+      Set-PrimaryDHCPRole
       Get-DeploymentMenu
     }
     
@@ -1192,7 +1196,7 @@ function Get-AutomationFunctions{
   }
 
   elseif ($Userchoice -eq "8"){
-
+      Write-Host $Global:ScopeID
       Get-DeploymentMenu
   }
 
@@ -1333,8 +1337,8 @@ Get-HostSettings
             ----------------------------------------------
             --------------DOMAIN CONTROLLER---------------
 
-            4.  Build the AD-DS Structure from Configs
-            5.  Set Primary DNS Records
+            4.  Build the AD-DS Structure from Configs (Primary)
+            5.  Set Primary DNS Records and DHCP Scope
             6.  Start a DNS Zone Transfer
             7.  Create a DHCP Failover
 
