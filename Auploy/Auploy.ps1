@@ -799,6 +799,7 @@ General notes
 }
 
 function Import-GPOBackup{
+
   <#
   .SYNOPSIS
   Imports a Previously used GPO from a Specified path.
@@ -814,18 +815,18 @@ function Import-GPOBackup{
   General notes
   #>
 
-  $GPOID = $GPOBackups.ID
-  $GPOTarget = $GPOBackups.Target
-  
   
       foreach ($GPO in $GPOBackups){
+      $GPOID = $GPO.ID
+      $GPOTarget = $GPO.Target
       import-gpo `
       -BackupId "$GPOID" `
       -TargetName "$GPOTarget" `
-      -path "$AuployPath\Settings\GPO\Backups\GPOBackups.Csv" `
+      -path "$AuployPath\Settings\GPO\Backups" `
       -CreateIfNeeded
+    }
   
-      }
+      
   }
 
 function Add-ADGroup {
@@ -1384,4 +1385,5 @@ function Get-UserSelection {
 ######## LOAD MENU ##########
 
 
-Get-TitleScreen
+#Get-TitleScreen
+Import-GPOBackup
