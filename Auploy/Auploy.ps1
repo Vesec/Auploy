@@ -51,9 +51,9 @@ try{
   $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OUStructure.csv"
   $Global:UserFile = Import-Csv "$AuployPath\Users\Users.csv"
   $Global:BaseFile = Import-Csv "$AuployPath\Settings\Host\Basefile.csv"
-  $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOKeyPolicies"
+  $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOKeyPolicies.csv"
   $Global:GPOStructure = Import-Csv "$AuployPath\Settings\GPO\GPOStructure.csv"
-  $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.Csv"
+  $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.csv"
   $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
   $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
   }
@@ -67,9 +67,9 @@ catch {
       $Global:OUFile = Import-Csv "$AuployPath\Settings\OU\OUStructure.csv"
       $Global:UserFile = Import-Csv "$AuployPath\Users\Users.csv"
       $Global:BaseFile = Import-Csv "$AuployPath\Settings\Host\Basefile.csv"
-      $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOKeyPolicies"
+      $Global:GPOSettings = Import-Csv "$AuployPath\Settings\GPO\GPOKeyPolicies.csv"
       $Global:GPOStructure = Import-Csv "$AuployPath\Settings\GPO\GPOStructure.csv"
-      $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.Csv"
+      $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.csv"
       $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
       $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
 
