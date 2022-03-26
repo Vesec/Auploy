@@ -1,0 +1,7 @@
+﻿Forest,Domains,Password,TopOU,Hostname,IPV4,Subnet,Mask,Gateway,Switch,NetworkID,Start,End,Percent,Install
+Int.Raudz.Com,,P@ssw0rd!!,Raudz,DC01-Kelowna,192.168.1.1,255.255.255.0,24,192.168.1.254,External Virtual Switch,192.168.1,192.168.1.100,192.168.1.220,AD,12
+,,,,DC02-Kelowna,192.168.1.2,255.255.255.0,24,192.168.1.254,External Virtual Switch,,,,AD,12
+,,,,RRAS-Kelowna,192.168.1.254,255.255.255.0,24,,External Virtual Switch,,,,AD,12
+,,,,DC03-Calgary,192.168.2.1,255.255.255.0,24,192.168.2.254,External Virtual Switch,192.168.2,192.168.2.100,192.168.2.220,AD,12
+,,,,DC04-Calgary,192.168.2.2,255.255.255.0,24,192.168.2.254,External Virtual Switch,,,,AD,12
+,,,,RRAS-Calgary,192.168.2.254,255.255.255.0,24,,External Virtual Switch,,,,AD,12

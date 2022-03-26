@@ -341,8 +341,23 @@ function Set-HostName{
   
   }
   
-  function Set-DNS{
+  function Set-HostDNS{
+
+  $AutoIndex = Get-NetAdapter -Name * -Physical
+  [int] $Intindex = $AutoIndex.Interfaceindex
+
+  $LAN = Read-Host "Kelowna or Calgary? (k/c)"
   
+  if ($LAN -eq "c" -or $LAN -eq "C"){
+    $HostIP =  $Basefile.IPV4[3]
+    $SecondaryIP =  $Basefile.IPV4[4]
+  }
+
+  elseif ($LAN -eq "k" -or $LAN -eq "K"){
+    $HostIP =  $Basefile.IPV4[0]
+    $SecondaryIP =  $Basefile.IPV4[1]
+  }
+
   Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
   
   }
@@ -403,45 +418,37 @@ function Set-HostName{
     ## SET DNS
     Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
     }
-function Add-PrimaryADRoles {
+function Add-PrimaryDCRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
-  #Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication – IncludeManagementTools
+  Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication –IncludeManagementTools
   Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force -DomainNetBiosName "Raudz"
 
 }
 
-function Add-SecondaryADRoles {
+function Add-SecondaryDCRoles {
 
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name DNS -IncludeManagementTools
-  #Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication – IncludeManagementTools
+  Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication –IncludeManagementTools
 }
 
-function Set-DNSSecondary{
+function Set-HostDNSSecondary{
 
   $Stall = Read-Host "Press [Enter] When You are Ready For The DNS Zone Transfer"
-  #Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
   Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name "$Forest" -ZoneFile "$Forest"
   Add-DnsServerSecondaryZone -MasterServers "$HostIP" -Name $DNSReverse -ZoneFile $DNSReverse ##Needs the Variable supplied from CSV
   Get-DnsServerZone
 }
 
-
-function Add-DHCPRole {
-
-  Install-windowsfeature DHCP -IncludeManagementTools
-
-}
-
-function Set-DHCPRole {
+function Set-PrimaryDHCPRole {
 
   Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $HostIP
-  Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
-  Add-DhcpServerv4Scope -Name "$TopOU Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet
+  #Add-DhcpServerInDC -DnsName "$Forest"  -IPAddress $SecondaryIP
+  Add-DhcpServerv4Scope -Name "$TopOU Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet -State Active -LeaseDuration 4.00:00:00
 
 }
 
@@ -460,7 +467,7 @@ Add-DhcpServerv4Failover `
 
 }
 
-function Set-DNSRecords{
+function Set-HostDNSRecords{
 <#
 .SYNOPSIS
 Short description
@@ -625,7 +632,10 @@ Make sure the CSV file is correctly Formatted for the OU Structure before import
 
 }
 
-
+function Add-NetworkFiles{
+  Copy-Item -Path "$AuployPath\Settings\GPO\Scripts\SMB Mapping.ps1" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\scripts"
+  Copy-Item -Path "$AuployPath\Settings\GPO\Wallpaper" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\Wallpaper" -Recurse
+}
 function Add-OUUsers {
 
 <#
@@ -910,7 +920,8 @@ function Get-TitleFunctions{
       set-executionpolicy remotesigned -Force
       $Global:Hostname = Read-Host "Enter The New Hostname"
       Set-Hostname
-      Set-DNS
+      Set-HostDNS
+      Restart-Computer
       Get-TitleScreen
 
   }
@@ -974,7 +985,7 @@ function Get-ToolFunctions{
     }
 
     elseif ($UserChoice -eq "5"){
-        Add-SecondaryADRoles
+        Add-SecondaryDCRoles
         Get-ToolsMenu
     }
 
@@ -985,13 +996,13 @@ function Get-ToolFunctions{
     }
 
     elseif ($UserChoice -eq "7"){
-        Set-DNSRecords
+        Set-HostDNSRecords
         Get-ToolsMenu
 
     }
 
     elseif ($UserChoice -eq "8"){
-        Set-DNSRecords
+        Set-HostDNSRecords
         Get-ToolsMenu
     }
 
@@ -1092,6 +1103,7 @@ function Get-AutomationFunctions{
       $Global:Roles = $Basefile.Roles[$DeviceSelection]
       $Global:ServerRole = $Basefile.Server[$DeviceSelection]
       $Global:NetworkID = $Basefile.NetworkID[$DeviceSelection]
+
       }
 
       catch{
@@ -1141,15 +1153,14 @@ function Get-AutomationFunctions{
 
        if ($Serverrole -eq "Primary"){
 
-          Add-PrimaryADRoles
+          Add-PrimaryDCRoles
           Set-FWPermissions
-          Set-DHCPRole
           Get-DeploymentMenu
       }
 
       elseif ($Serverrole -eq "Secondary"){
 
-          Add-SecondaryADRoles
+          Add-SecondaryDCRoles
           Set-FWPermissions
           $NetBios = Read-Host "Enter the NETBIOS"
           Install-ADDSDomainController -Domainname "$Forest" -Credential (Get-Credential "$NetBios\Administrator")
@@ -1162,13 +1173,13 @@ function Get-AutomationFunctions{
   }
 
   elseif ($Userchoice -eq "5") {
-      Set-DNSRecords
+      Set-HostDNSRecords
       Get-DeploymentMenu
     }
     
     
   elseif ($Userchoice -eq "6") {
-      Set-DNSSecondary
+      Set-HostDNSSecondary
       Get-DeploymentMenu
     }
 
@@ -1191,7 +1202,8 @@ function Get-AutomationFunctions{
 
       Set-PasswordPolicy
       Set-ComputerPath
-      Set-DHCPRole
+      Import-GPOBackup
+      Add-NetworkFiles
       Get-DeploymentMenu
   
   }
