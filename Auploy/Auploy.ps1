@@ -428,8 +428,8 @@ function Set-HostName{
       $OffsiteSecondaryIP = "192.168.2.2"
     }
     elseif ($ADsite -eq "Calgary"){
-      $OffsiteHostIP = "192.168.2.1"
-      $OffsiteSecondaryIP = "192.168.2.2"
+      $OffsiteHostIP = "192.168.1.1"
+      $OffsiteSecondaryIP = "192.168.1.2"
     }
     Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
     }
@@ -438,7 +438,12 @@ function Add-PrimaryDCRoles {
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication,FS-SMB1 –IncludeManagementTools
+  Write-Warning "IMPORTANT"
+  $InstallForest = Read-Host "Create the Forest $Forest and promote this server to the Primary Controller? (DC01) (y/n)"
+
+  if ($InstallForest -eq "y" -or $InstallForest -eq "Y"){
   Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force -DomainNetBiosName "Raudz"
+  }
 
 }
 
