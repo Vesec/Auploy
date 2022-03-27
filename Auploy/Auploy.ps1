@@ -354,14 +354,18 @@ function Set-HostName{
   if ($LAN -eq "c" -or $LAN -eq "C"){
     $HostIP =  $Basefile.IPV4[3]
     $SecondaryIP =  $Basefile.IPV4[4]
+    $OffsiteHostIP = "192.168.2.1"
+    $OffsiteSecondaryIP = "192.168.2.2"
   }
 
   elseif ($LAN -eq "k" -or $LAN -eq "K"){
     $HostIP =  $Basefile.IPV4[0]
     $SecondaryIP =  $Basefile.IPV4[1]
+    $OffsiteHostIP = "192.168.2.1"
+    $OffsiteSecondaryIP = "192.168.2.2"
   }
 
-  Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
+  Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
   
   }
 
@@ -413,19 +417,27 @@ function Set-HostName{
     $AutoIndex = Get-NetAdapter -Name * -Physical
     [int] $Intindex = $AutoIndex.Interfaceindex
     
-    
+  
     ##SET STATIC ADDRESS
     New-NetIPAddress -InterfaceIndex $Intindex -IPAddress $HostIP -Prefixlength $Mask `
     -DefaultGateway $GatewayIP -AddressFamily IPv4
     
     ## SET DNS
-    Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP")
+    if ($ADsite -eq "Kelowna"){
+      $OffsiteHostIP = "192.168.2.1"
+      $OffsiteSecondaryIP = "192.168.2.2"
+    }
+    elseif ($ADsite -eq "Calgary"){
+      $OffsiteHostIP = "192.168.2.1"
+      $OffsiteSecondaryIP = "192.168.2.2"
+    }
+    Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
     }
 function Add-PrimaryDCRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
-  Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication –IncludeManagementTools
+  Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication,FS-SMB1 –IncludeManagementTools
   Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force -DomainNetBiosName "Raudz"
 
 }
@@ -436,7 +448,7 @@ function Add-SecondaryDCRoles {
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name DNS -IncludeManagementTools
-  Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication –IncludeManagementTools
+  Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication,FS-SMB1 –IncludeManagementTools
 }
 
 function Set-HostDNSSecondary{
