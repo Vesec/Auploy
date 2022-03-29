@@ -458,7 +458,7 @@ function Set-HostName{
     -DefaultGateway $GatewayIP -AddressFamily IPv4
     
     ## SET DNS
-    Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
+    #Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
     }
 
 function Add-PrimaryDCRoles {
@@ -1256,8 +1256,9 @@ function Get-AutomationFunctions{
 
     if ($Serverrole -ne "RRAS"){
       Add-NetworkSettings
+      
     }
-
+      Set-HostDNS
       Set-Hostname
       Disable-IPv6
       Restart-Computer
@@ -1285,6 +1286,7 @@ function Get-AutomationFunctions{
 
       elseif ($Serverrole -eq "RAS"){
         Install-WindowsFeature "RemoteAccess","Routing","DirectAccess-VPN","RSAT-RemoteAccess" -IncludeManagementTools
+        set-FWPermissions
 
 
         Get-DeploymentMenu
