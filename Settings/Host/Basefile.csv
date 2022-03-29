@@ -1,7 +1,7 @@
-﻿Forest,Domains,Password,TopOU,Hostname,IPV4,Subnet,Mask,Gateway,Switch,NetworkID,DHCPStart,DHCPEnd,Roles,Index,VPNStart,VPNEnd,DHCPPercent,Server,ScopeID
-Int.Raudz.Com,,P@ssw0rd!!,Raudz,DC01-Kelowna,192.168.1.1,255.255.255.0,24,192.168.1.254,External Virtual Switch,192.168.1,192.168.1.100,192.168.1.220,"AD, DNS, DHCP, DFS",1,N/A,N/A,50,Primary,192.168.1.0
-,,,,DC02-Kelowna,192.168.1.2,255.255.255.0,24,192.168.1.254,External Virtual Switch,,192.168.1.100,192.168.1.220,"AD, DNS, DHCP, DFS",2,N/A,N/A,N/A,Secondary,
-,,,,RRAS-Kelowna,192.168.1.254,255.255.255.0,24,N/A,External Virtual Switch,,N/A,N/A,RAS,3,192.168.1.50,192.168.1.99,N/A,RAS,
-,,,,DC03-Calgary,192.168.2.1,255.255.255.0,24,192.168.2.254,External Virtual Switch,192.168.2,192.168.2.100,192.168.2.220,"AD, DNS, DHCP, DFS",4,N/A,N/A,50,Primary,192.168.2.0
-,,,,DC04-Calgary,192.168.2.2,255.255.255.0,24,192.168.2.254,External Virtual Switch,,192.168.2.100,192.168.2.220,"AD, DNS, DHCP, DFS",5,N/A,N/A,N/A,Secondary,
-,,,,RRAS-Calgary,192.168.2.254,255.255.255.0,24,N/A,External Virtual Switch,,N/A,N/A,RAS,6,192.168.2.50,192.168.2.99,N/A,RAS,
+﻿Forest,Domains,Password,TopOU,Hostname,IPV4,Subnet,Mask,Gateway,Switch,NetworkID,DHCPStart,DHCPEnd,Roles,Index,VPNStart,VPNEnd,DHCPPercent,Server,ScopeID,Site
+Int.Raudz.Com,,P@ssw0rd!!,Raudz,DC01-Kelowna,192.168.1.1,255.255.255.0,24,192.168.1.254,External Virtual Switch,192.168.1,192.168.1.100,192.168.1.220,"AD, DNS, DHCP, DFS",1,N/A,N/A,50,Primary,192.168.1.0,Kelowna
+,,,,DC02-Kelowna,192.168.1.2,255.255.255.0,24,192.168.1.254,External Virtual Switch,,192.168.1.100,192.168.1.220,"AD, DNS, DHCP, DFS",2,N/A,N/A,N/A,Secondary,,Kelowna
+,,,,RRAS-Kelowna,192.168.1.254,255.255.255.0,24,N/A,External Virtual Switch,,N/A,N/A,RAS,3,192.168.1.50,192.168.1.99,N/A,RAS,,Kelowna
+,,,,DC03-Calgary,192.168.2.1,255.255.255.0,24,192.168.2.254,External Virtual Switch,192.168.2,192.168.2.100,192.168.2.220,"AD, DNS, DHCP, DFS",4,N/A,N/A,50,Secondary,192.168.2.0,Calgary
+,,,,DC04-Calgary,192.168.2.2,255.255.255.0,24,192.168.2.254,External Virtual Switch,,192.168.2.100,192.168.2.220,"AD, DNS, DHCP, DFS",5,N/A,N/A,N/A,Secondary,,Calgary
+,,,,RRAS-Calgary,192.168.2.254,255.255.255.0,24,N/A,External Virtual Switch,,N/A,N/A,RAS,6,192.168.2.50,192.168.2.99,N/A,RAS,,Calgary

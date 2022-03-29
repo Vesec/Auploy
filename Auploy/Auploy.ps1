@@ -438,7 +438,7 @@ function Add-PrimaryDCRoles {
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication,FS-SMB1 –IncludeManagementTools
-  Write-Warning "IMPORTANT"
+  Write-Warning "IMPORTANT, IF THIS IS NOT DC01 CLOSE THE SCRIPT"
   $InstallForest = Read-Host "Create the Forest $Forest and promote this server to the Primary Controller? (DC01) (y/n)"
 
   if ($InstallForest -eq "y" -or $InstallForest -eq "Y"){
