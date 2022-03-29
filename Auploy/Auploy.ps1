@@ -392,15 +392,14 @@ function Set-HostName{
     }
 
     function Add-CalgaryRRASConnection{
-      install-Remoteaccess -Computername "RRAS-Calgary" -vpntype VPNS2S -IPAddressRange "192.168.2.50","192.168.2.99" -Legacy
-      Add-VPnS2SInterface -Name "RRAS-Kelowna" -Protocol IKEv2 -Destination 10.10.1.1 -AuthenticationMethod PresharedKey -IPV4Subnet 191.168.1.0/24:1 -Password "P@ssw0rd!!"
+      install-Remoteaccess -Computername "RRAS-Calgary" -vpntype VPNS2S -IPAddressRange "192.168.1.50","192.168.1.99" -Legacy
+      Add-VPnS2SInterface -Name "RRAS-Kelowna" -Protocol IKEv2 -Destination 10.10.1.1 -AuthenticationMethod PSKonly -IPV4Subnet 191.168.1.0/24:1 -SharedSecret "P@ssw0rd!!"
       Set-VpnServerIPsecConfiguration -CustomPolicy -EncryptionMethod AES256 -AuthenticationTransformConstants SHA196 -CipherTransformConstants AES256 -IntegrityCheckMethod SHA1
-      
       }
 
     function Add-KelownaRRASConnection{
-      install-Remoteaccess -Computername "RRAS-Kelowna" -vpntype VPNS2S -IPAddressRange "192.168.1.50","192.168.1.99" -Legacy
-      Add-VPnS2SInterface -Name "RRAS-Calgary" -Protocol IKEv2 -Destination 10.10.1.5 -AuthenticationMethod PresharedKey -IPV4Subnet 191.168.2.0/24:1 -Password "P@ssw0rd!!"
+      install-Remoteaccess -Computername "RRAS-Kelowna" -vpntype VPNS2S -IPAddressRange "192.168.2.50","192.168.2.99" -Legacy
+      Add-VPnS2SInterface -Name "RRAS-Calgary" -Protocol IKEv2 -Destination 10.10.1.5 -AuthenticationMethod PSKonly -IPV4Subnet 191.168.2.0/24:1 -SharedSecret "P@ssw0rd!!"
       Set-VpnServerIPsecConfiguration -CustomPolicy -EncryptionMethod AES256 -AuthenticationTransformConstants SHA196 -CipherTransformConstants AES256 -IntegrityCheckMethod SHA1
       
       }
@@ -1286,15 +1285,7 @@ function Get-AutomationFunctions{
 
       elseif ($Serverrole -eq "RAS"){
         Install-WindowsFeature "RemoteAccess","Routing","DirectAccess-VPN","RSAT-RemoteAccess" -IncludeManagementTools
-        $RRASLocation = Read-Host "BE CAREFUL, Is this Kelowna or Calgary? (K/C)"
 
-        if($RRASLocation -eq "k" -or $RRASLocation -eq "K"){
-          Add-KelownaRRASConnection
-        }
-
-        elseif($RRASLocation -eq "c" -or $RRASLocation -eq "C"){
-          Add-CalgaryRRASConnection
-        }
 
         Get-DeploymentMenu
       }
@@ -1358,6 +1349,20 @@ function Get-AutomationFunctions{
       Add-PTRRecords
       Get-DeploymentMenu
   }
+
+  elseif ($Userchoice -eq "11"){
+    $RRASLocation = Read-Host "BE CAREFUL, Is this Kelowna or Calgary? (K/C)"
+
+    if($RRASLocation -eq "k" -or $RRASLocation -eq "K"){
+      Add-KelownaRRASConnection
+    }
+  
+    elseif($RRASLocation -eq "c" -or $RRASLocation -eq "C"){
+      Add-CalgaryRRASConnection
+    }
+    Get-DeploymentMenu
+}
+
 
   elseif ($Userchoice -eq "Back" -or $Userchoice -eq "back"){
           Get-TitleScreen
@@ -1500,8 +1505,9 @@ Get-HostSettings
             -----------------------------------------------
             ----------------SPECIAL ROLES------------------
 
-            9.  Start RAS Setup (DC01)
+            9.  Start DFS Setup (DC01)
             10. Update All Pointer Records (Primary)
+            11. RRAS Connection Setup
 
 
 "
