@@ -56,6 +56,7 @@ try{
   $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.csv"
   $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
   $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
+  $Global:NetworkConfig = Import-CSV "$Auploypath\Settings\Host\NetworkSettings.csv"
   }
 
 catch {
@@ -72,6 +73,7 @@ catch {
       $Global:GPOBackups = Import-Csv "$AuployPath\Settings\GPO\GPOBackups.csv"
       $Global:GroupsFile = Import-Csv "$AuployPath\Users\UserGroups.csv"
       $Global:DriveMap = Import-Csv "$AuployPath\Settings\Drives\DriveMap.csv"
+      $Global:NetworkConfig = Import-CSV "$Auploypath\Settings\Host\NetworkSettings.csv"
 
     }
     catch{Get-AuployPath}
@@ -285,7 +287,7 @@ General notes
   
     foreach ($Drive in $Drivemap){
         
-        $NetworkDrive = "$VMPath" + $Drive.Name + ".Vhdx"
+        $NetworkDrive = "$VMPath" + $Drive.Name + $Vmname + ".Vhdx"
         New-VHD -Path "$NetworkDrive" -Dynamic -SizeBytes $VMHDDSize
         Get-VM "$VMName" | Add-VMHardDiskDrive -ControllerType SCSI -ControllerNumber 0 -Path $NetworkDrive
 
@@ -349,25 +351,59 @@ function Set-HostName{
   $AutoIndex = Get-NetAdapter -Name * -Physical
   [int] $Intindex = $AutoIndex.Interfaceindex
 
-  $LAN = Read-Host "Kelowna or Calgary? (k/c)"
-  
-  if ($LAN -eq "c" -or $LAN -eq "C"){
-    $HostIP =  $Basefile.IPV4[3]
-    $SecondaryIP =  $Basefile.IPV4[4]
-    $OffsiteHostIP = "192.168.2.1"
-    $OffsiteSecondaryIP = "192.168.2.2"
-  }
-
-  elseif ($LAN -eq "k" -or $LAN -eq "K"){
-    $HostIP =  $Basefile.IPV4[0]
-    $SecondaryIP =  $Basefile.IPV4[1]
-    $OffsiteHostIP = "192.168.2.1"
-    $OffsiteSecondaryIP = "192.168.2.2"
-  }
-
-  Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
+  Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("192.168.1.1","192.168.1.2","192.168.2.1","192.168.2.2")
   
   }
+
+  function Add-RRASNetSettings{
+
+    $AutoIndex = Get-NetAdapter -Name * -Physical
+    [int] $LANIntIndex = $AutoIndex.InterfaceIndex[0]
+    [int] $WANIntIndex = $AutoIndex.InterfaceIndex[1]
+    $LANName = $AutoIndex.Name[0]
+    $WANNAme = $AutoIndex.Name[1]
+    
+    
+    foreach($Line in $NetworkConfig){
+    
+        $RRASIP = $Line.IPAddress
+        $RRASMask = $Line.Mask
+        $RRASGatewayIP = $Line.Gateway
+    
+        if($Line.NIC -eq "LAN" -and $Line.Hostname -eq $env:COMPUTERNAME){
+    
+            New-NetIPAddress -InterfaceIndex $LANIntIndex -IPAddress $RRASIP -Prefixlength $RRASMask `
+            -AddressFamily IPv4
+    
+            Rename-NetAdapter -Name $LANName -NewName "LAN"
+            
+        }
+    
+        if($Line.NIC -eq "WAN" -and $Line.Hostname -eq $env:COMPUTERNAME){
+    
+            New-NetIPAddress -InterfaceIndex $WANIntIndex -IPAddress $RRASIP -Prefixlength $RRASMask `
+            -DefaultGateway "$RRASGatewayIP" -AddressFamily IPv4
+    
+            Rename-NetAdapter -Name $WANName -NewName "WAN"
+            
+        }
+    }
+    
+    }
+
+    function Add-CalgaryRRASConnection{
+      install-Remoteaccess -Computername "RRAS-Calgary" -vpntype VPNS2S -IPAddressRange "192.168.2.50","192.168.2.99" -Legacy
+      Add-VPnS2SInterface -Name "RRAS-Kelowna" -Protocol IKEv2 -Destination 10.10.1.1 -AuthenticationMethod PresharedKey -IPV4Subnet 191.168.1.0/24:1 -Password "P@ssw0rd!!"
+      Set-VpnServerIPsecConfiguration -CustomPolicy -EncryptionMethod AES256 -AuthenticationTransformConstants SHA196 -CipherTransformConstants AES256 -IntegrityCheckMethod SHA1
+      
+      }
+
+    function Add-KelownaRRASConnection{
+      install-Remoteaccess -Computername "RRAS-Kelowna" -vpntype VPNS2S -IPAddressRange "192.168.1.50","192.168.1.99" -Legacy
+      Add-VPnS2SInterface -Name "RRAS-Calgary" -Protocol IKEv2 -Destination 10.10.1.5 -AuthenticationMethod PresharedKey -IPV4Subnet 191.168.2.0/24:1 -Password "P@ssw0rd!!"
+      Set-VpnServerIPsecConfiguration -CustomPolicy -EncryptionMethod AES256 -AuthenticationTransformConstants SHA196 -CipherTransformConstants AES256 -IntegrityCheckMethod SHA1
+      
+      }
 
   function Disable-IpV6{
     <#
@@ -423,27 +459,15 @@ function Set-HostName{
     -DefaultGateway $GatewayIP -AddressFamily IPv4
     
     ## SET DNS
-    if ($ADsite -eq "Kelowna"){
-      $OffsiteHostIP = "192.168.2.1"
-      $OffsiteSecondaryIP = "192.168.2.2"
-    }
-    elseif ($ADsite -eq "Calgary"){
-      $OffsiteHostIP = "192.168.1.1"
-      $OffsiteSecondaryIP = "192.168.1.2"
-    }
     Set-DnsClientServerAddress -InterfaceIndex $IntIndex -ServerAddresses ("$HostIP","$SecondaryIP","$OffsiteHostIP","$OffsiteSecondaryIP")
     }
+
 function Add-PrimaryDCRoles {
 
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication,FS-SMB1 –IncludeManagementTools
-  Write-Warning "IMPORTANT, IF THIS IS NOT DC01 CLOSE THE SCRIPT"
-  $InstallForest = Read-Host "Create the Forest $Forest and promote this server to the Primary Controller? (DC01) (y/n)"
-
-  if ($InstallForest -eq "y" -or $InstallForest -eq "Y"){
   Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force -DomainNetBiosName "Raudz"
-  }
 
 }
 
@@ -468,8 +492,9 @@ function Set-PrimaryDHCPRole {
 
   Add-DhcpServerInDC -DnsName "$Forest" -IPAddress $HostIP
   Add-DhcpServerv4Scope -Name "$TopOU Network" -StartRange $DHCPStart -EndRange $DHCPEnd -SubnetMask $Subnet -State Active -LeaseDuration 4.00:00:00
+  }
 
-}
+
 
 function Add-DHCPFailover{
 
@@ -535,11 +560,42 @@ catch{
 
 }
 
+function Add-PTRRecords{
+
+  $ReverseZone = Get-DnsServerZone | Where-Object {$_.Zonename -like '*192.in-addr.arpa*'}
+  $ReverseNameKel, $ReverseNameCal = $ReverseZone.Zonename
+
+  $DomainList =  Get-ADDomainController -filter "*"
+  $Hostname = $DomainList.Hostname
+  $IPAddress = $DomainList.Ipv4Address
+  $Forest = $DomainList.Forest
+  $IPsub = $IPAddress.Substring(8,3)
+  $IPPrefix = $IPAddress.Substring(0,7)
+
+
+foreach ($IP in $IPSub){
+  $ReverseName, $PTR = $IP.Split(".")
+
+  Add-DnsServerResourceRecordPtr `
+  -Name "$PTR" `
+  -ZoneName "$ReverseName.168.192.in-addr.arpa" `
+  -AllowUpdateAny `
+  -TimeToLive 01:00:00 `
+  -AgeRecord `
+  -PtrDomainName "$Forest"
+  
+  }
+
+}
+
 function Set-FWPermissions{
 
+  try{
     New-NetFirewallRule -DisplayName "Allow IPv4 Ping Inbound" -Name "Allow IPv4 Ping Inbound" -direction Inbound -IcmpType 8 -Protocol ICMPv4 -Action Allow
     New-NetFirewallRule -DisplayName "Allow IPv4 Ping Outbound" -Name "Allow IPv4 Ping Outbound" -direction Outbound -IcmpType 8 -Protocol ICMPv4 -Action Allow
+  }
 
+  catch{ Write-Warning "Firewall Rule Already Exists"}
 }
 function Add-Host{
 
@@ -657,6 +713,61 @@ function Add-NetworkFiles{
   Copy-Item -Path "$AuployPath\Settings\GPO\Scripts\Create-SMBMapping.ps1" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\scripts"
   Copy-Item -Path "$AuployPath\Settings\GPO\Scripts\Remove-SMBMapping.ps1" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\scripts"
   Copy-Item -Path "$AuployPath\Settings\GPO\Wallpaper" -Destination "\\dc01-kelowna\SYSVOL\Int.Raudz.Com\Wallpaper" -Recurse
+}
+
+function Add-DFSRoot{
+
+  New-Item -Path "C:\DFSRoots\Shares" -ItemType Directory  -Force | Out-Null
+  New-SmbShare -Name ShareAccess -path 'C:\DFSRoots\Shares' -ChangeAccess "Domain Users" -FullAccess "Domain Admins"
+  New-DfsnRoot -TargetPath "\\DC01-KELOWNA\ShareAccess" -Type DomainV2 -Path "\\Int.Raudz.Com\ShareAccess" -GrantAdminAccounts "GrantAdmin" -EnableRootScalability $True
+  }
+  
+  
+  
+  function Add-DFSFolders{
+  
+  $DriveArray = "Finance", "Internal", "IT Resources", "Marketing", "HR"
+  
+      foreach($Drive in $DriveArray){
+
+          New-DfsReplicationGroup -GroupName "$Drive Volume" | `
+          New-DfsReplicatedFolder -FolderName "$Drive" | `
+          Add-DfsrMember -ComputerName "DC01-Kelowna","DC02-Kelowna" | `
+          Format-Table dnsname,groupname -auto -wrap
+      
+          if ($Drive -eq "Finance"){
+              $Letter = 'F:\'
+              }
+          elseif ($Drive -eq "Internal"){
+              $Letter = 'I:\'
+              }
+          elseif ($Drive -eq "IT Resources"){
+              $Letter = 'Z:\'
+              }
+          elseif ($Drive -eq "Marketing"){
+              $Letter = 'M:\'
+              }
+          elseif ($Drive -eq "HR"){
+              $Letter = 'H:\'
+              }
+          
+      Add-DfsrConnection -GroupName "$Drive Volume" -SourceComputerName "DC01-Kelowna" `
+      -DestinationComputerName "DC02-Kelowna" | Format-Table *name -wrap -auto
+      
+      Set-DfsrMembership -GroupName "$Drive Volume" -FolderName "$Drive" -ContentPath "$Letter" `
+      -ComputerName "DC01-Kelowna" -PrimaryMember $True -StagingPathQuotaInMB 16384 -Force | `
+      Format-Table *name,*path,primary* -auto -wrap
+      
+      Set-DfsrMembership -GroupName "$Drive Volume" -FolderName "$Drive" -ContentPath "$Letter" `
+      -ComputerName "DC02-Kelowna" -StagingPathQuotaInMB 16384 -Force | `
+      Format-Table *name,*path,primary* -autosize -wrap
+      
+      New-DfsnFolder `
+      -Path "\\Raudz\ShareAccess\$Drive" `
+      -TargetPath "\\DC01-KELOWNA\$Drive" `
+      -EnableTargetFailback $True
+  
+  }
 }
 function Add-OUUsers {
 
@@ -1139,7 +1250,15 @@ function Get-AutomationFunctions{
   }
 
   elseif ($Userchoice -eq "2"){
+
+    if ($Serverrole -eq "RRAS"){
+      Add-RRASNetSettings
+    }
+
+    if ($Serverrole -ne "RRAS"){
       Add-NetworkSettings
+    }
+
       Set-Hostname
       Disable-IPv6
       Restart-Computer
@@ -1166,6 +1285,17 @@ function Get-AutomationFunctions{
       }
 
       elseif ($Serverrole -eq "RAS"){
+        Install-WindowsFeature "RemoteAccess","Routing","DirectAccess-VPN","RSAT-RemoteAccess" -IncludeManagementTools
+        $RRASLocation = Read-Host "BE CAREFUL, Is this Kelowna or Calgary? (K/C)"
+
+        if($RRASLocation -eq "k" -or $RRASLocation -eq "K"){
+          Add-KelownaRRASConnection
+        }
+
+        elseif($RRASLocation -eq "c" -or $RRASLocation -eq "C"){
+          Add-CalgaryRRASConnection
+        }
+
         Get-DeploymentMenu
       }
   }
@@ -1179,7 +1309,7 @@ function Get-AutomationFunctions{
     Add-GPOValues
     Add-OUUsers
     Add-ADGroup
-    $Drivesetup = Read-Host "Setup and map Network Drives Attached to the Server? (y/n)"
+    $Drivesetup = Read-Host "Setup and Map Network Drives Attached to the Server? (y/n)"
 
     if ($Drivesetup -eq "y" -or $Drivesetup -eq "Y"){
       Add-DriveProperties
@@ -1200,25 +1330,32 @@ function Get-AutomationFunctions{
       Set-PrimaryDHCPRole
       Get-DeploymentMenu
     }
+
+    elseif ($Userchoice -eq "6") {
+      Set-HostDNSRecords
+      Set-PrimaryDHCPRole
+      Get-DeploymentMenu
+    }
     
     
-  elseif ($Userchoice -eq "6") {
+  elseif ($Userchoice -eq "7") {
       Set-HostDNSSecondary
       Get-DeploymentMenu
     }
 
-  elseif ($Userchoice -eq "7"){
+  elseif ($Userchoice -eq "8"){
       Add-DHCPFailover
       Get-DeploymentMenu
   }
 
-  elseif ($Userchoice -eq "8"){
-      Write-Host $Global:ScopeID
+  elseif ($Userchoice -eq "9"){
+      Add-DFSRoot
+      Add-DFSFolders
       Get-DeploymentMenu
   }
 
-  elseif ($Userchoice -eq "9"){
-
+  elseif ($Userchoice -eq "10"){
+      Add-PTRRecords
       Get-DeploymentMenu
   }
 
@@ -1355,15 +1492,17 @@ Get-HostSettings
             --------------DOMAIN CONTROLLER---------------
 
             4.  Build the AD-DS Structure from Configs (Primary)
-            5.  Set Primary DNS Records and DHCP Scope
-            6.  Start a DNS Zone Transfer
-            7.  Create a DHCP Failover
+            5.  Set Primary DNS Records and DHCP Scope (Primary)
+            6.  Set Secondary DNS Records and DHCP Scope (Secondary)
+            7.  Start a DNS Zone Transfer (Secondary)
+            8.  Create a DHCP Failover (DC01)
 
             -----------------------------------------------
             ----------------SPECIAL ROLES------------------
 
-            9.  Start RAS Setup
-            10.  Start DFS Setup
+            9.  Start RAS Setup (DC01)
+            10. Update All Pointer Records (Primary)
+
 
 "
 Get-UserSelection
