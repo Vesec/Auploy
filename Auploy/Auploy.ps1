@@ -466,7 +466,10 @@ function Add-PrimaryDCRoles {
   Install-windowsfeature -Name AD-Domain-Services -IncludeManagementTool
   Install-windowsfeature -Name DHCP -IncludeManagementTool
   Install-WindowsFeature -Name FS-DFS-Namespace,FS-DFS-Replication,FS-SMB1 –IncludeManagementTools
+
+  if($env:COMPUTERNAME -eq "DC01-Kelowna"){
   Install-ADDSForest -DomainName "$Forest" -InstallDNS -Force -DomainNetBiosName "Raudz"
+}
 
 }
 
@@ -1250,11 +1253,11 @@ function Get-AutomationFunctions{
 
   elseif ($Userchoice -eq "2"){
 
-    if ($Serverrole -eq "RRAS"){
+    if ($Serverrole -eq "RAS"){
       Add-RRASNetSettings
     }
 
-    if ($Serverrole -ne "RRAS"){
+    if ($Serverrole -ne "RAS"){
       Add-NetworkSettings
       
     }
