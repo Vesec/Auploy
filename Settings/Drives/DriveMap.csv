@@ -1,6 +1,6 @@
-﻿Name,Letter,Groups,Exclude
-Finance,F,"Executives,IT Admin","Raudz\20220007,Raudz\20220009"
-HR,H,"Executives,IT Admin,HR,Administration","Raudz\20220008,Raudz\20220009"
-Internal,I,Domain Users,
-Marketing,M,"Executives,IT Tech",
-IT Resources,Z,"IT Admin,IT Tech",
+﻿Name,Letter,Groups,Exclude,test
+Finance,F,"Executives,IT Admin","Raudz\20220007,Raudz\20220009",
+HR,H,"Executives,IT Admin,HR,Administration","Raudz\20220008,Raudz\20220009",
+Internal,I,Domain Users,,
+Marketing,M,"Executives,IT Tech",,
+IT Resources,Z,"IT Admin,IT Tech",,
